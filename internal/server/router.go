@@ -11,7 +11,7 @@ import (
 )
 
 func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks) *gin.Engine {
-	if cfg.Env == "local" {
+	if cfg.Env == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)

@@ -12,9 +12,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /bin/gym ./c
 
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata \
+    && mkdir -p /var/log/gym \
+    && chown nobody:nobody /var/log/gym
 
 COPY --from=builder /bin/gym /usr/local/bin/gym
+COPY config/ /config/
 
 USER nobody
 

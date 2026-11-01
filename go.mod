@@ -11,6 +11,7 @@ require (
 	github.com/redis/go-redis/v9 v9.23.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (

@@ -6,9 +6,8 @@ x-app-build: &app-build
     dockerfile: docker/app.Dockerfile
 
 x-app-env: &app-env
-  GYM_ENV: production
-  GYM_LOGGER_LEVEL: ${GYM_LOGGER_LEVEL:-info}
-  GYM_LOGGER_FORMAT: ${GYM_LOGGER_FORMAT:-json}
+  GYM_ENV: ${GYM_ENV:-prod}
+  GYM_LOGGER_FILE_PATH: /var/log/gym/app.log
   GYM_HTTP_HOST: 0.0.0.0
   GYM_HTTP_PORT: ${GYM_HTTP_PORT:-8080}
   GYM_MYSQL_HOST: mysql
@@ -58,7 +57,9 @@ services:
     container_name: gym-migrate
     restart: "no"
     command: ["migrate", "up"]
-    environment: *app-env
+    environment:
+      <<: *app-env
+      GYM_LOGGER_FILE_PATH: /var/log/gym/migrate.log
     depends_on:
       mysql:
         condition: service_healthy
@@ -71,6 +72,8 @@ services:
     environment: *app-env
     ports:
       - "${HTTP_PORT:-8080}:${GYM_HTTP_PORT:-8080}"
+    volumes:
+      - ${LOGS_DIR:-./var/log/gym}:/var/log/gym
     depends_on:
       mysql:
         condition: service_healthy
@@ -84,7 +87,11 @@ services:
     container_name: gym-worker
     restart: unless-stopped
     command: ["worker"]
-    environment: *app-env
+    environment:
+      <<: *app-env
+      GYM_LOGGER_FILE_PATH: /var/log/gym/worker.log
+    volumes:
+      - ${LOGS_DIR:-./var/log/gym}:/var/log/gym
     depends_on:
       mysql:
         condition: service_healthy
@@ -106,6 +113,44 @@ services:
       redis:
         condition: service_healthy
 
+  mysql-test:
+    image: mysql:8.0
+    container_name: gym-mysql-test
+    restart: unless-stopped
+    profiles: ["test"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-gym}
+      MYSQL_DATABASE: gym_test
+      MYSQL_USER: gym_test
+      MYSQL_PASSWORD: gym_test
+    ports:
+      - "${MYSQL_TEST_PORT:-3307}:3306"
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD:-gym} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: gym-redis-test
+    restart: unless-stopped
+    profiles: ["test"]
+    ports:
+      - "${REDIS_TEST_PORT:-6380}:6379"
+    volumes:
+      - redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 volumes:
   mysql_data:
   redis_data:
+  mysql_test_data:
+  redis_test_data:

@@ -2,6 +2,7 @@
 package app
 
 import (
+	"io"
 	"log/slog"
 
 	"github.com/jmoiron/sqlx"
@@ -16,37 +17,49 @@ import (
 )
 
 type App struct {
-	Config *config.Config
-	Log    *slog.Logger
-	DB     *sqlx.DB
-	Redis  *redis.Client
-	Tasks  *tasks.Client
+	Config    *config.Config
+	Log       *slog.Logger
+	DB        *sqlx.DB
+	Redis     *redis.Client
+	Tasks     *tasks.Client
+	logCloser io.Closer
 }
 
 func New(cfg *config.Config) (*App, error) {
-	log := logger.New(cfg.Logger)
+	log, logCloser, err := logger.New(cfg.Logger)
+	if err != nil {
+		return nil, err
+	}
 
 	db, err := database.NewMySQL(cfg.MySQL)
 	if err != nil {
+		_ = logCloser.Close()
 		return nil, err
 	}
 
 	rdb, err := database.NewRedis(cfg.Redis)
 	if err != nil {
 		_ = db.Close()
+		_ = logCloser.Close()
 		return nil, err
 	}
 
 	tasksClient := tasks.NewClient(database.AsynqRedisConnOpt(cfg.Redis))
 
-	log.Info("application initialized", "env", cfg.Env)
+	log.Info("application initialized",
+		"env", cfg.Env,
+		"log_level", cfg.Logger.Level,
+		"log_format", cfg.Logger.Format,
+		"log_outputs", cfg.Logger.Outputs,
+	)
 
 	return &App{
-		Config: cfg,
-		Log:    log,
-		DB:     db,
-		Redis:  rdb,
-		Tasks:  tasksClient,
+		Config:    cfg,
+		Log:       log,
+		DB:        db,
+		Redis:     rdb,
+		Tasks:     tasksClient,
+		logCloser: logCloser,
 	}, nil
 }
 
@@ -60,6 +73,11 @@ func (a *App) Close() {
 	}
 	if err := a.DB.Close(); err != nil {
 		a.Log.Error("close mysql", "error", err)
+	}
+	if a.logCloser != nil {
+		if err := a.logCloser.Close(); err != nil {
+			a.Log.Error("close log file", "error", err)
+		}
 	}
 }
 

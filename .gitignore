@@ -5,6 +5,12 @@
 # env
 .env
 
+# logs
+logs/
+
+# container logs (bind mount)
+var/
+
 # IDE
 .idea/
 .vscode/

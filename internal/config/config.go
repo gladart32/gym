@@ -9,6 +9,23 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Envs is the whitelist of allowed environments.
+var Envs = []string{"dev", "prod", "test"}
+
+// ValidateEnv checks that env is one of the allowed values.
+func ValidateEnv(env string) error {
+	for _, e := range Envs {
+		if env == e {
+			return nil
+		}
+	}
+	if env == "" {
+		return fmt.Errorf("config: GYM_ENV is not set (expected one of: %s). Example: GYM_ENV=dev make run",
+			strings.Join(Envs, " | "))
+	}
+	return fmt.Errorf("config: invalid GYM_ENV %q (expected one of: %s)", env, strings.Join(Envs, " | "))
+}
+
 type Config struct {
 	Env    string `mapstructure:"env"`
 	HTTP   HTTP   `mapstructure:"http"`
@@ -28,8 +45,18 @@ func (h HTTP) Address() string {
 }
 
 type Logger struct {
-	Level  string `mapstructure:"level"`
-	Format string `mapstructure:"format"`
+	Level   string   `mapstructure:"level"`
+	Format  string   `mapstructure:"format"`
+	Outputs []string `mapstructure:"outputs"`
+	File    LogFile  `mapstructure:"file"`
+}
+
+type LogFile struct {
+	Path       string `mapstructure:"path"`
+	MaxSizeMB  int    `mapstructure:"max_size_mb"`
+	MaxAgeDays int    `mapstructure:"max_age_days"`
+	MaxBackups int    `mapstructure:"max_backups"`
+	Compress   bool   `mapstructure:"compress"`
 }
 
 type MySQL struct {
@@ -61,8 +88,13 @@ type Asynq struct {
 	Queues      map[string]int `mapstructure:"queues"`
 }
 
-// Load reads configuration: defaults → yaml file (if found) → GYM_* env overrides.
+// Load reads configuration from the given file: defaults → yaml → GYM_* env overrides.
+// The file must exist; the environment (env key / GYM_ENV) must pass the whitelist.
 func Load(path string) (*Config, error) {
+	if path == "" {
+		return nil, errors.New("config: config file path is required")
+	}
+
 	v := viper.New()
 
 	v.SetEnvPrefix("GYM")
@@ -70,7 +102,7 @@ func Load(path string) (*Config, error) {
 	v.AutomaticEnv()
 
 	// Explicitly bind env vars so they are picked up by Unmarshal even
-	// without a config file or defaults (known viper AutomaticEnv caveat).
+	// for keys without defaults (known viper AutomaticEnv caveat).
 	for _, key := range envKeys {
 		if err := v.BindEnv(key); err != nil {
 			return nil, fmt.Errorf("bind env %s: %w", key, err)
@@ -78,21 +110,10 @@ func Load(path string) (*Config, error) {
 	}
 
 	setDefaults(v)
-
-	if path != "" {
-		v.SetConfigFile(path)
-	} else {
-		v.AddConfigPath("./config")
-		v.AddConfigPath(".")
-		v.SetConfigName("local")
-		v.SetConfigType("yaml")
-	}
+	v.SetConfigFile(path)
 
 	if err := v.ReadInConfig(); err != nil {
-		var configFileNotFound viper.ConfigFileNotFoundError
-		if !errors.As(err, &configFileNotFound) {
-			return nil, fmt.Errorf("read config: %w", err)
-		}
+		return nil, fmt.Errorf("read config %s: %w", path, err)
 	}
 
 	var cfg Config
@@ -111,7 +132,9 @@ func Load(path string) (*Config, error) {
 var envKeys = []string{
 	"env",
 	"http.host", "http.port",
-	"logger.level", "logger.format",
+	"logger.level", "logger.format", "logger.outputs",
+	"logger.file.path", "logger.file.max_size_mb", "logger.file.max_age_days",
+	"logger.file.max_backups", "logger.file.compress",
 	"mysql.host", "mysql.port", "mysql.user", "mysql.password", "mysql.database",
 	"mysql.max_open_conns", "mysql.max_idle_conns", "mysql.conn_max_lifetime",
 	"redis.addr", "redis.password", "redis.db",
@@ -119,11 +142,15 @@ var envKeys = []string{
 }
 
 func setDefaults(v *viper.Viper) {
-	v.SetDefault("env", "local")
 	v.SetDefault("http.host", "0.0.0.0")
 	v.SetDefault("http.port", 8080)
 	v.SetDefault("logger.level", "info")
 	v.SetDefault("logger.format", "json")
+	v.SetDefault("logger.outputs", []string{"stdout"})
+	v.SetDefault("logger.file.max_size_mb", 100)
+	v.SetDefault("logger.file.max_age_days", 30)
+	v.SetDefault("logger.file.max_backups", 10)
+	v.SetDefault("logger.file.compress", true)
 	v.SetDefault("mysql.host", "localhost")
 	v.SetDefault("mysql.port", 3306)
 	v.SetDefault("mysql.max_open_conns", 25)
@@ -136,8 +163,8 @@ func setDefaults(v *viper.Viper) {
 }
 
 func validate(cfg *Config) error {
-	if cfg.Env == "" {
-		return errors.New("config: env is required")
+	if err := ValidateEnv(cfg.Env); err != nil {
+		return err
 	}
 	if cfg.HTTP.Port <= 0 || cfg.HTTP.Port > 65535 {
 		return fmt.Errorf("config: invalid http.port %d", cfg.HTTP.Port)
@@ -147,6 +174,19 @@ func validate(cfg *Config) error {
 	}
 	if cfg.Redis.Addr == "" {
 		return errors.New("config: redis.addr is required")
+	}
+	if len(cfg.Logger.Outputs) == 0 {
+		return errors.New("config: logger.outputs must contain at least one of: stdout, file")
+	}
+	for _, out := range cfg.Logger.Outputs {
+		if out != "stdout" && out != "file" {
+			return fmt.Errorf("config: unknown logger output %q (expected stdout or file)", out)
+		}
+	}
+	for _, out := range cfg.Logger.Outputs {
+		if out == "file" && cfg.Logger.File.Path == "" {
+			return errors.New("config: logger.file.path is required when output \"file\" is enabled")
+		}
 	}
 	return nil
 }

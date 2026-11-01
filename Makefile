@@ -1,6 +1,9 @@
 BINARY := bin/gym
 
-.PHONY: all build run worker tidy vet up down logs ps ui migrate-up migrate-down migrate-status migrate-create
+# Default environment for local commands; can be overridden: GYM_ENV=prod make ...
+export GYM_ENV ?= dev
+
+.PHONY: all build run worker tidy vet test test-db-up test-db-down up down logs ps ui migrate-up migrate-down migrate-status migrate-create
 
 all: build
 
@@ -11,13 +14,22 @@ run:
 	go run ./cmd/gym serve
 
 worker:
-	go run ./cmd/gym worker
+	GYM_LOGGER_FILE_PATH=logs/worker.log go run ./cmd/gym worker
 
 tidy:
 	go mod tidy
 
 vet:
 	go vet ./...
+
+test:
+	GYM_ENV=test go test ./...
+
+test-db-up:
+	docker compose --profile test up -d mysql-test redis-test
+
+test-db-down:
+	docker compose --profile test down
 
 up:
 	docker compose up -d --build

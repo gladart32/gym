@@ -1,0 +1,38 @@
+env: test
+
+http:
+  host: "127.0.0.1"
+  port: 8080
+
+logger:
+  level: "debug"
+  format: "text"
+  outputs: ["stdout", "file"]
+  file:
+    path: "logs/app.log"
+    max_size_mb: 10
+    max_age_days: 7
+    max_backups: 3
+    compress: true
+
+mysql:
+  host: "127.0.0.1"
+  port: 3307
+  user: "gym_test"
+  password: "gym_test"
+  database: "gym_test"
+  max_open_conns: 5
+  max_idle_conns: 2
+  conn_max_lifetime: "5m"
+
+redis:
+  addr: "127.0.0.1:6380"
+  password: ""
+  db: 0
+
+asynq:
+  concurrency: 2
+  queues:
+    critical: 6
+    default: 3
+    maintenance: 1

@@ -10,6 +10,7 @@ Makefile
 README.md
 Plan.md
 bin/
+logs/
 .idea/
 .vscode/
 .DS_Store

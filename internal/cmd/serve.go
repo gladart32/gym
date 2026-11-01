@@ -14,7 +14,11 @@ import (
 )
 
 func loadConfig() (*config.Config, error) {
-	cfg, err := config.Load(configPath)
+	env, err := resolveEnv()
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := config.Load(resolveConfigPath(env))
 	if err != nil {
 		return nil, fmt.Errorf("load config: %w", err)
 	}

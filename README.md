@@ -9,7 +9,7 @@ cp .env.example .env
 docker compose up -d --build   # или make up
 ```
 
-Поднимаются: MySQL 8, Redis 7, `migrate` (одноразовый, применяет миграции), `app` (API), `worker` (asynq + scheduler).
+Поднимаются: MySQL 8, Redis 7, `migrate` (одноразовый, применяет миграции), `app` (API), `worker` (asynq + scheduler). Среда контейнеров берётся из `.env` (`GYM_ENV`, дефолт `prod`): при `dev` — text-логи в stdout и debug-уровень; при `prod` — json в stdout + `/var/log/gym/app.log` (volume `logs_data`, ротация lumberjack).
 
 Проверка:
 
@@ -31,25 +31,42 @@ docker compose --profile ui up -d asynqmon   # или make ui
 Нужны запущенные MySQL и Redis (можно только их: `docker compose up -d mysql redis`).
 
 ```bash
-make run            # API
+make run            # API (GYM_ENV=dev по умолчанию)
 make worker         # фоновый воркер
 make migrate-up     # применить миграции (goose, зашиты в бинарник)
 make migrate-create name=add_sessions   # создать миграцию
 ```
 
+## Тесты
+
+Отдельная тестовая инфраструктура, чтобы не трогать dev-данные: `mysql-test` (:3307, база `gym_test`) и `redis-test` (:6380) в compose-профиле `test`.
+
+```bash
+make test-db-up     # поднять тестовые mysql/redis
+make test           # GYM_ENV=test go test ./...
+make test-db-down   # остановить
+```
+
+Интеграционные тесты: `internal/testutil.Start(t)` грузит `config/test.yaml`, применяет миграции и собирает приложение тем же DI, что и прод. Примеры: `handler/health_test.go`, `tasks/example_test.go`.
+
 ## Конфигурация
 
-`config/local.yaml` — базовые значения; переменные окружения с префиксом `GYM_` перекрывают (12-factor):
+**Среда** обязательна и выбирается по приоритету: флаг `--env` > переменная `GYM_ENV` > ошибка запуска.
+Разрешённые значения: `dev` | `prod` | `test`. Файл конфига: `config/<env>.yaml` (или `--config path`).
 
-| Env                  | Config key                |
-|----------------------|---------------------------|
-| `GYM_HTTP_PORT`      | `http.port`               |
-| `GYM_MYSQL_HOST`     | `mysql.host`              |
-| `GYM_REDIS_ADDR`     | `redis.addr`              |
-| `GYM_LOGGER_LEVEL`   | `logger.level`            |
-| `GYM_LOGGER_FORMAT`  | `logger.format`           |
+Значения: `GYM_* env` > yaml > дефолты в коде (12-factor):
 
-Файл конфигурации опционален — все ключи имеют дефолты. Путь к файлу: `--config path/to.yaml`.
+| Env                        | Config key                  |
+|----------------------------|-----------------------------|
+| `GYM_HTTP_PORT`            | `http.port`                 |
+| `GYM_MYSQL_HOST`           | `mysql.host`                |
+| `GYM_REDIS_ADDR`           | `redis.addr`                |
+| `GYM_LOGGER_LEVEL`         | `logger.level`              |
+| `GYM_LOGGER_FORMAT`        | `logger.format`             |
+| `GYM_LOGGER_OUTPUTS`       | `logger.outputs` (через `,`)|
+| `GYM_LOGGER_FILE_PATH`     | `logger.file.path`          |
+
+Профили логов: dev — text → stdout; prod — json → stdout + файл `/var/log/gym/app.log` с ротацией.
 
 ## CLI
 
@@ -58,6 +75,8 @@ gym serve                  # HTTP API
 gym worker                 # фоновые таски + cron-scheduler
 gym migrate up|down|status|create NAME
 ```
+
+Все команды (кроме `migrate create`) требуют GYM_ENV.
 
 ## Фоновые таски
 
@@ -72,15 +91,17 @@ gym migrate up|down|status|create NAME
 cmd/gym/            точка входа
 internal/cmd/       Cobra-команды (serve, worker, migrate)
 internal/app/       ручной DI
-internal/config/    Viper (YAML + env)
-internal/logger/    Slog
+internal/config/    Viper (окружения dev|prod|test, env overrides)
+internal/logger/    Slog + lumberjack (stdout/файл)
 internal/database/  MySQL (sqlx), Redis
 internal/server/    Gin-сервер, graceful shutdown
 internal/transport/ handlers + middleware
 internal/tasks/     asynq: client, worker, scheduler, handlers
+internal/testutil/  хелперы интеграционных тестов
+config/             dev.yaml, prod.yaml, test.yaml
 migrations/         goose-миграции (embed)
 ```
 
 ## Make-таргеты
 
-`make up|down|logs|ps|ui` — Docker; `make run|worker|build|vet|tidy` — локально; `make migrate-*` — миграции.
+`make up|down|logs|ps|ui` — Docker; `make run|worker|build|vet|tidy|test` — локально; `make test-db-up|test-db-down` — тест-инфраструктура; `make migrate-*` — миграции.
