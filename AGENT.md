@@ -33,6 +33,7 @@
 
 ```bash
 make up            # docker compose up -d --build (mysql, redis, migrate, app, worker; GYM_ENV=prod внутри)
+make start / stop  # запуск/остановка уже созданных контейнеров (без пересборки и удаления; первый раз — make up)
 make ui            # + asynqmon (веб-UI очередей, :8081, профиль "ui")
 make down / logs / ps
 make run / worker  # локально (GYM_ENV=dev; нужны mysql+redis: docker compose up -d mysql redis)

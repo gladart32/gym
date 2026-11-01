@@ -3,7 +3,7 @@ BINARY := bin/gym
 # Default environment for local commands; can be overridden: GYM_ENV=prod make ...
 export GYM_ENV ?= dev
 
-.PHONY: all build run worker tidy vet test test-db-up test-db-down up down logs ps ui migrate-up migrate-down migrate-status migrate-create
+.PHONY: all build run worker tidy vet test test-db-up test-db-down up down start stop logs ps ui migrate-up migrate-down migrate-status migrate-create
 
 all: build
 
@@ -36,6 +36,12 @@ up:
 
 down:
 	docker compose down
+
+start:
+	docker compose start
+
+stop:
+	docker compose stop
 
 logs:
 	docker compose logs -f app worker
