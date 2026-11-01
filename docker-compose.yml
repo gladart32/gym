@@ -1,0 +1,111 @@
+name: gym
+
+x-app-build: &app-build
+  build:
+    context: .
+    dockerfile: docker/app.Dockerfile
+
+x-app-env: &app-env
+  GYM_ENV: production
+  GYM_LOGGER_LEVEL: ${GYM_LOGGER_LEVEL:-info}
+  GYM_LOGGER_FORMAT: ${GYM_LOGGER_FORMAT:-json}
+  GYM_HTTP_HOST: 0.0.0.0
+  GYM_HTTP_PORT: ${GYM_HTTP_PORT:-8080}
+  GYM_MYSQL_HOST: mysql
+  GYM_MYSQL_PORT: 3306
+  GYM_MYSQL_USER: ${MYSQL_USER:-gym}
+  GYM_MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gym}
+  GYM_MYSQL_DATABASE: ${MYSQL_DATABASE:-gym}
+  GYM_REDIS_ADDR: redis:6379
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gym-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-gym}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gym}
+      MYSQL_USER: ${MYSQL_USER:-gym}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gym}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD:-gym} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: gym-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    <<: *app-build
+    container_name: gym-migrate
+    restart: "no"
+    command: ["migrate", "up"]
+    environment: *app-env
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  app:
+    <<: *app-build
+    container_name: gym-app
+    restart: unless-stopped
+    command: ["serve"]
+    environment: *app-env
+    ports:
+      - "${HTTP_PORT:-8080}:${GYM_HTTP_PORT:-8080}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app-build
+    container_name: gym-worker
+    restart: unless-stopped
+    command: ["worker"]
+    environment: *app-env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  asynqmon:
+    image: hibiken/asynqmon:latest
+    container_name: gym-asynqmon
+    restart: unless-stopped
+    profiles: ["ui"]
+    environment:
+      REDIS_ADDR: redis:6379
+    ports:
+      - "${ASYNQMON_PORT:-8081}:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  redis_data:
