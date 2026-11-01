@@ -28,7 +28,7 @@ func TestReadiness(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d, body: %s", http.StatusOK, rec.Code, rec.Body.String())
 	}
-	for _, want := range []string{`"mysql":"ok"`, `"redis":"ok"`, `"status":"ok"`} {
+	for _, want := range []string{`"mysql":"ok"`, `"redis":"ok"`, `"status":"success"`} {
 		if !strings.Contains(rec.Body.String(), want) {
 			t.Fatalf("body %q does not contain %q", rec.Body.String(), want)
 		}

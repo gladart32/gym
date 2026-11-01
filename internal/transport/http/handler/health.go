@@ -7,6 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
+
+	"github.com/gladart32/gym/internal/transport/http/middleware"
+	"github.com/gladart32/gym/internal/transport/http/response"
 )
 
 // Health provides liveness and readiness endpoints.
@@ -21,7 +24,7 @@ func NewHealth(log *slog.Logger, db *sqlx.DB, rdb *redis.Client) *Health {
 }
 
 func (h *Health) Liveness(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	response.Success(c, http.StatusOK, nil)
 }
 
 func (h *Health) Readiness(c *gin.Context) {
@@ -42,12 +45,14 @@ func (h *Health) Readiness(c *gin.Context) {
 		checks["redis"] = "ok"
 	}
 
-	status := "ok"
-	code := http.StatusOK
 	if !healthy {
-		status = "unavailable"
-		code = http.StatusServiceUnavailable
+		h.log.ErrorContext(c.Request.Context(), "readiness check failed",
+			"checks", checks,
+			"request_id", middleware.RequestIDFrom(c),
+		)
+		response.Error(c, http.StatusServiceUnavailable, "service unavailable")
+		return
 	}
 
-	c.JSON(code, gin.H{"status": status, "checks": checks})
+	response.Success(c, http.StatusOK, gin.H{"checks": checks})
 }

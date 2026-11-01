@@ -47,7 +47,7 @@ go build ./... && go vet ./...   # проверка перед завершен�
 ## Паттерны добавления фич
 
 **Новый эндпоинт:**
-1. Handler в `internal/transport/http/handler/`
+1. Handler в `internal/transport/http/handler/` (ответ — только через `response.Success/Error`, см. «Формат ответов API»)
 2. Роут в `internal/server/router.go` (группа `/api/v1`)
 3. Зависимости конструировать в `internal/app/app.go` и передавать явно
 
@@ -75,6 +75,15 @@ go build ./... && go vet ./...   # проверка перед завершен�
 
 - MySQL: sqlx, DSN собирается в `config.MySQL.DSN()` (уже с `parseTime`, `loc=UTC`, `multiStatements` для goose)
 - Запросы — сырой SQL в репозиториях/handler'ах тасков, скан в структуры через sqlx
+
+## Формат ответов API
+
+Единый envelope для всех JSON-ответов. Хелперы: `internal/transport/http/response`.
+
+- Успех: `response.Success(c, code, data)` → `{"status":"success","data":<...>}`; `data` опускается при nil
+- Ошибка: `response.Error(c, code, msg)` → `{"status":"error","message":"..."}`; делает Abort (безопасна и в middleware)
+- Не-JSON ответы (файлы, редиректы — `c.File`/`c.Data`/`c.Redirect`) пишутся напрямую, минуя хелперы; middleware-обёртку сознательно не используем
+- Хелс-чеки (/healthz, /ready) тоже в envelope; /ready при 503 отдаёт только message, детали проверок — в лог
 
 ## Известные грабли
 

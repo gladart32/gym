@@ -6,6 +6,8 @@ import (
 	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/gladart32/gym/internal/transport/http/response"
 )
 
 // Recover converts panics into 500 responses and logs the stack trace.
@@ -18,9 +20,7 @@ func Recover(log *slog.Logger) gin.HandlerFunc {
 					"request_id", RequestIDFrom(c),
 					"stack", string(debug.Stack()),
 				)
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"error": "internal server error",
-				})
+				response.Error(c, http.StatusInternalServerError, "internal server error")
 			}
 		}()
 		c.Next()
