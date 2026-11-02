@@ -12,12 +12,16 @@
 
 ## Команды
 
+Из папки `frontend/`:
+
 ```bash
 npm run dev     # :5173, прокси /api → localhost:8080
 npm run build   # production-сборка в dist/
 npm run lint    # oxlint + eslint (с --fix)
 npm run format  # Prettier + сортировка Tailwind-классов
 ```
+
+Эквиваленты из корня репо: `make front-dev / front-build / front-lint / front-format / front-install`.
 
 ## Структура
 
