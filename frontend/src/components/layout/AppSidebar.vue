@@ -5,9 +5,7 @@ import {
   Dumbbell,
   LayoutDashboard,
   ListChecks,
-  Moon,
   Settings,
-  Sun,
 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
@@ -15,7 +13,6 @@ import { RouterLink, useRoute } from 'vue-router'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -24,11 +21,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { useTheme } from '@/composables/useTheme'
 
 const { t } = useI18n()
 const route = useRoute()
-const { isDark, toggleTheme } = useTheme()
 
 const items = computed(() => [
   { title: t('nav.dashboard'), to: '/', icon: LayoutDashboard },
@@ -77,16 +72,5 @@ const items = computed(() => [
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
-    <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton :tooltip="$t('nav.toggleTheme')" @click="toggleTheme">
-            <Sun v-if="isDark" />
-            <Moon v-else />
-            <span>{{ $t('nav.toggleTheme') }}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarFooter>
   </Sidebar>
 </template>

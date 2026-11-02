@@ -6,8 +6,7 @@
     "workouts": "Workouts",
     "exercises": "Exercises",
     "analytics": "Analytics",
-    "settings": "Settings",
-    "toggleTheme": "Toggle theme"
+    "settings": "Settings"
   },
   "common": {
     "email": "Email",
@@ -41,9 +40,10 @@
   "settings": {
     "appearance": "Appearance",
     "appearanceDescription": "Interface settings",
-    "darkTheme": "Dark theme",
-    "enabled": "On",
-    "disabled": "Off",
+    "theme": "Theme",
+    "theme_auto": "System",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
     "language": "Language",
     "otherLater": "More settings coming later"
   },

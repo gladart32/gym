@@ -6,8 +6,7 @@
     "workouts": "Тренировки",
     "exercises": "Упражнения",
     "analytics": "Аналитика",
-    "settings": "Настройки",
-    "toggleTheme": "Сменить тему"
+    "settings": "Настройки"
   },
   "common": {
     "email": "Email",
@@ -41,9 +40,10 @@
   "settings": {
     "appearance": "Внешний вид",
     "appearanceDescription": "Настройки интерфейса",
-    "darkTheme": "Тёмная тема",
-    "enabled": "Включена",
-    "disabled": "Выключена",
+    "theme": "Тема",
+    "theme_auto": "Системная",
+    "theme_light": "Светлая",
+    "theme_dark": "Тёмная",
     "language": "Язык",
     "otherLater": "Остальные настройки появятся позже"
   },

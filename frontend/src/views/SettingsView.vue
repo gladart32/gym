@@ -8,7 +8,9 @@ import { setLocale, supportedLocales } from '@/i18n'
 import { useTheme } from '@/composables/useTheme'
 
 const { locale } = useI18n()
-const { isDark, toggleTheme } = useTheme()
+const { theme } = useTheme()
+
+const themeOptions = ['auto', 'light', 'dark']
 </script>
 
 <template>
@@ -21,10 +23,18 @@ const { isDark, toggleTheme } = useTheme()
       </CardHeader>
       <CardContent>
         <div class="flex items-center justify-between">
-          <span class="text-sm">{{ $t('settings.darkTheme') }}</span>
-          <Button variant="outline" size="sm" @click="toggleTheme">
-            {{ isDark ? $t('settings.enabled') : $t('settings.disabled') }}
-          </Button>
+          <span class="text-sm">{{ $t('settings.theme') }}</span>
+          <div class="flex gap-2">
+            <Button
+              v-for="option in themeOptions"
+              :key="option"
+              :variant="theme === option ? 'default' : 'outline'"
+              size="sm"
+              @click="theme = option"
+            >
+              {{ $t(`settings.theme_${option}`) }}
+            </Button>
+          </div>
         </div>
         <Separator class="my-4" />
         <div class="flex items-center justify-between">

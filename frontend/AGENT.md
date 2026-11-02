@@ -33,7 +33,7 @@ src/
   layouts/               — DefaultLayout (сайдбар + контент) и AuthLayout (центрированная карточка для auth-страниц)
   components/layout/     — AppSidebar (меню, сворачивается до иконок, на мобилке — Sheet)
   components/ui/         — shadcn-vue компоненты (наш код, можно править)
-  composables/useTheme.js — тёмная тема: VueUse useDark (localStorage, по умолчанию системная)
+  composables/useTheme.js — тема: VueUse useColorMode, режимы auto/light/dark (auto = синхронизация с ОС, дефолт), localStorage `gym-theme`
   views/                 — DashboardView (/), WorkoutsView, ExercisesView, AnalyticsView, SettingsView, NotFoundView
   views/auth/            — LoginView, RegisterView, ResetPasswordView, ConfirmEmailView (читает ?token=)
 ```
@@ -52,7 +52,7 @@ src/
 - UI-компоненты добавлять: `npx shadcn-vue@latest add <name>` (существующие перезаписывать флагом `-o`)
 - Auth-формы — заглушки (сабмит → тост): эндпоинтов на бэкенде пока нет, при подключении API использовать `@/api/http.js`
 - Тосты: `import { toast } from 'vue-sonner'`; `<Toaster rich-colors position="top-right" />` уже в App.vue
-- Тёмная тема: класс `.dark` на `<html>` (уже учтён в CSS-переменных main.css), переключение только через `useTheme`
+- Тема: режимы `auto`/`light`/`dark` через `useColorMode` (класс `.dark` на `<html>`, CSS-переменные в main.css); `auto` — синхронизация с ОС и дефолт без записи в localStorage (ключ `gym-theme`). Переключение только через `useTheme`, селектор — на странице настроек
 - Tailwind-классы не сортировать руками — `npm run format` делает это сам
 
 ## Известные грабли

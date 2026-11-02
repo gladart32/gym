@@ -1,8 +1,11 @@
-import { useDark, useToggle } from '@vueuse/core'
+import { useColorMode } from '@vueuse/core'
 
-const isDark = useDark()
-const toggleTheme = useToggle(isDark)
+const theme = useColorMode({
+  storageKey: 'gym-theme',
+  emitAuto: true,
+  modes: { auto: '', light: '', dark: 'dark' },
+})
 
 export function useTheme() {
-  return { isDark, toggleTheme }
+  return { theme }
 }
