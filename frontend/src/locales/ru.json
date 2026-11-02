@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "menu": "Меню",
+    "tagline": "трекер тренировок",
+    "dashboard": "Главная",
+    "workouts": "Тренировки",
+    "exercises": "Упражнения",
+    "analytics": "Аналитика",
+    "settings": "Настройки",
+    "toggleTheme": "Сменить тему"
+  },
+  "common": {
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Пароль",
+    "name": "Имя",
+    "namePlaceholder": "Иван",
+    "login": "Войти",
+    "register": "Регистрация",
+    "inDevelopment": "Раздел в разработке"
+  },
+  "dashboard": {
+    "workouts": "Тренировки",
+    "workoutsHint": "за последние 7 дней",
+    "exercises": "Упражнения",
+    "exercisesHint": "в справочнике",
+    "tonnage": "Тоннаж",
+    "tonnageHint": "за текущий месяц"
+  },
+  "workouts": {
+    "description": "Здесь будет журнал тренировок",
+    "start": "Начать тренировку"
+  },
+  "exercises": {
+    "description": "Здесь будет справочник упражнений",
+    "add": "Добавить упражнение"
+  },
+  "analytics": {
+    "description": "Здесь будут графики прогресса"
+  },
+  "settings": {
+    "appearance": "Внешний вид",
+    "appearanceDescription": "Настройки интерфейса",
+    "darkTheme": "Тёмная тема",
+    "enabled": "Включена",
+    "disabled": "Выключена",
+    "language": "Язык",
+    "otherLater": "Остальные настройки появятся позже"
+  },
+  "notFound": {
+    "title": "Страница не найдена",
+    "home": "На главную"
+  },
+  "auth": {
+    "loginTitle": "Вход",
+    "loginDescription": "Войдите, чтобы продолжить тренировки",
+    "registerTitle": "Регистрация",
+    "registerDescription": "Создайте аккаунт, чтобы отслеживать прогресс",
+    "forgotPassword": "Забыли пароль?",
+    "noAccount": "Нет аккаунта?",
+    "hasAccount": "Уже есть аккаунт?",
+    "confirmPassword": "Повторите пароль",
+    "createAccount": "Создать аккаунт",
+    "resetTitle": "Сброс пароля",
+    "resetDescription": "Введите email — пришлём ссылку для восстановления",
+    "resetSent": "Проверьте почту",
+    "sendLink": "Отправить ссылку",
+    "rememberedPassword": "Вспомнили пароль?",
+    "confirmTitle": "Подтверждение email",
+    "confirmPending": "Проверяем ваш токен подтверждения…",
+    "confirmInvalid": "Ссылка для подтверждения недействительна или отсутствует. Запросите новое письмо в настройках профиля.",
+    "goToLogin": "Перейти ко входу",
+    "toastLoginNotReady": "Авторизация ещё не подключена",
+    "toastRegisterNotReady": "Регистрация ещё не подключена",
+    "toastEmailNotReady": "Отправка писем ещё не подключена",
+    "toastPasswordsMismatch": "Пароли не совпадают"
+  }
+}

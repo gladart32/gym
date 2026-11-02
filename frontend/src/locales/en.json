@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "menu": "Menu",
+    "tagline": "workout tracker",
+    "dashboard": "Home",
+    "workouts": "Workouts",
+    "exercises": "Exercises",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "toggleTheme": "Toggle theme"
+  },
+  "common": {
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "name": "Name",
+    "namePlaceholder": "John",
+    "login": "Sign in",
+    "register": "Sign up",
+    "inDevelopment": "Section under development"
+  },
+  "dashboard": {
+    "workouts": "Workouts",
+    "workoutsHint": "in the last 7 days",
+    "exercises": "Exercises",
+    "exercisesHint": "in the catalog",
+    "tonnage": "Tonnage",
+    "tonnageHint": "this month"
+  },
+  "workouts": {
+    "description": "Workout log will be here",
+    "start": "Start workout"
+  },
+  "exercises": {
+    "description": "Exercise catalog will be here",
+    "add": "Add exercise"
+  },
+  "analytics": {
+    "description": "Progress charts will be here"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "appearanceDescription": "Interface settings",
+    "darkTheme": "Dark theme",
+    "enabled": "On",
+    "disabled": "Off",
+    "language": "Language",
+    "otherLater": "More settings coming later"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "home": "Go home"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "loginDescription": "Sign in to continue your workouts",
+    "registerTitle": "Sign up",
+    "registerDescription": "Create an account to track your progress",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "No account yet?",
+    "hasAccount": "Already have an account?",
+    "confirmPassword": "Repeat password",
+    "createAccount": "Create account",
+    "resetTitle": "Password reset",
+    "resetDescription": "Enter your email — we will send a recovery link",
+    "resetSent": "Check your inbox",
+    "sendLink": "Send link",
+    "rememberedPassword": "Remembered your password?",
+    "confirmTitle": "Email confirmation",
+    "confirmPending": "Verifying your confirmation token…",
+    "confirmInvalid": "The confirmation link is invalid or missing. Request a new email in your profile settings.",
+    "goToLogin": "Go to sign in",
+    "toastLoginNotReady": "Authorization is not wired up yet",
+    "toastRegisterNotReady": "Registration is not wired up yet",
+    "toastEmailNotReady": "Email sending is not wired up yet",
+    "toastPasswordsMismatch": "Passwords do not match"
+  }
+}

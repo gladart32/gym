@@ -1,0 +1,23 @@
+# binaries
+/bin/
+*.exe
+
+# env
+.env
+
+# logs
+logs/
+
+# container logs (bind mount)
+var/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# go
+*.test
+*.out

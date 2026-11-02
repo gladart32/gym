@@ -1,12 +1,5 @@
-# binaries
-/bin/
-*.exe
-
 # env
 .env
-
-# logs
-logs/
 
 # container logs (bind mount)
 var/
@@ -17,7 +10,3 @@ var/
 
 # OS
 .DS_Store
-
-# go
-*.test
-*.out

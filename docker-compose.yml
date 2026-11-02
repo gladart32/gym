@@ -2,7 +2,7 @@ name: gym
 
 x-app-build: &app-build
   build:
-    context: .
+    context: ./backend
     dockerfile: docker/app.Dockerfile
 
 x-app-env: &app-env
