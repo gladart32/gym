@@ -27,6 +27,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-gym}
       MYSQL_USER: ${MYSQL_USER:-gym}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gym}
+      TZ: UTC
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
@@ -70,8 +71,6 @@ services:
     restart: unless-stopped
     command: ["serve"]
     environment: *app-env
-    ports:
-      - "${HTTP_PORT:-8080}:${GYM_HTTP_PORT:-8080}"
     volumes:
       - ${LOGS_DIR:-./var/log/gym}:/var/log/gym
     depends_on:
@@ -81,6 +80,20 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: gym-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./backend/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/media:/media:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      app:
+        condition: service_started
 
   worker:
     <<: *app-build
@@ -116,13 +129,14 @@ services:
   mysql-test:
     image: mysql:8.0
     container_name: gym-mysql-test
-    restart: unless-stopped
+    restart: "no"
     profiles: ["test"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-gym}
       MYSQL_DATABASE: gym_test
       MYSQL_USER: gym_test
       MYSQL_PASSWORD: gym_test
+      TZ: UTC
     ports:
       - "${MYSQL_TEST_PORT:-3307}:3306"
     volumes:
@@ -137,7 +151,7 @@ services:
   redis-test:
     image: redis:7-alpine
     container_name: gym-redis-test
-    restart: unless-stopped
+    restart: "no"
     profiles: ["test"]
     ports:
       - "${REDIS_TEST_PORT:-6380}:6379"

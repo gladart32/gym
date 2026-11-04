@@ -76,6 +76,12 @@ go build ./... && go vet ./...                   # проверка перед �
 - MySQL: sqlx, DSN собирается в `config.MySQL.DSN()` (уже с `parseTime`, `loc=UTC`, `multiStatements` для goose)
 - Запросы — сырой SQL в репозиториях/handler'ах тасков, скан в структуры через sqlx
 
+## Схема БД и каталог упражнений
+
+- Схема — в `migrations/` (6 файлов по доменам: users, auth, catalog, programs, workouts, stats_views + 6 VIEW статистики). Каталог/программы/тренировки и авторизация (сессии, email-токены) — описание таблиц и флоу auth: `docs/DB.md`, `docs/AUTH.md` (в корне репо)
+- Каталог наполняется: `make dataset-fetch` (клон exercises-dataset в `data/`) + `make seed-catalog` (из корня репо) — импортёр `backend/cmd/importer` (отдельный main-пакет, без cobra) заливает 1324 упражнения, справочники, ru/en переводы и пути медиа. Переводы (`data/translations/ru`) — в git; сам датасет — нет
+- Медиа: `backend/media/{videos,images}` (gitignored, `make media-sync` из `data/exercises-dataset`). В compose их раздаёт nginx (`/media/`, immutable-кэш 30d), в dev — Gin (`r.Static("/media", "media")`, путь от CWD бэкенда). В БД хранятся только относительные пути (`videos/0001-….gif`), URL = `/media/` + path. Лицензия Gym visual: рядом с медиа показывать attribution из `exercise_media.attribution`
+
 ## Формат ответов API
 
 Единый envelope для всех JSON-ответов. Хелперы: `internal/transport/http/response`.
@@ -94,3 +100,5 @@ go build ./... && go vet ./...                   # проверка перед �
 - `asynq.queues` (map) не входит в `envKeys` — меняется только через yaml
 - Раздельные лог-файлы на процесс обязательны (см. Логи) — ротация общего файла несколькими процессами приводит к потере данных
 - Graceful shutdown: и сервер, и worker слушают SIGTERM/SIGINT через `signal.NotifyContext`; лог-файл закрывается последним в `app.Close()`
+- **Смена схемы на существующих volume**: миграции применяются только на пустую базу; на volume со старой заглушечной `users` FK из `00002_auth.sql` падает с `Error 3780` (несовместимые типы) — лечится пересозданием volume (`docker compose down -v`, для test — удалением `gym_mysql_test_data`)
+- MySQL-клиент в `docker exec` без `--default-character-set=utf8mb4` показывает `?` и роняет кириллические LIKE/FULLTEXT-запросы — данные при этом в порядке

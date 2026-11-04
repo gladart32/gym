@@ -1,6 +1,12 @@
 # env
 .env
 
+# exercise catalog media (make media-sync, served by nginx)
+backend/media/
+
+# exercises-dataset clone (make dataset-fetch, ~136 MB of GIF/thumbnails)
+data/exercises-dataset/
+
 # container logs (bind mount)
 var/
 

@@ -26,6 +26,7 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 
 	r.GET("/healthz", health.Liveness)
 	r.GET("/ready", health.Readiness)
+	r.Static("/media", "media")
 
 	api := r.Group("/api/v1")
 	{

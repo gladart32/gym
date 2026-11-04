@@ -7,26 +7,34 @@
 ```
 backend/            Go-сервис: Gin, MySQL 8, Redis 7 (asynq), Slog, Viper, Cobra, goose
 frontend/           Vue 3 SPA: Vite, Tailwind CSS v4, shadcn-vue, vue-i18n (ru/en), Pinia
-docker-compose.yml  инфраструктура (build-контекст ./backend)
+backend/media/      GIF и миниатюры упражнений (make media-sync, в git не попадают)
+data/               каталог упражнений: переводы ru (в git) + клон датасета (make dataset-fetch, не в git)
+docs/               описание схемы БД (DB.md) и флоу авторизации (AUTH.md)
+docker-compose.yml  инфраструктура (build-контекст ./backend; nginx — точка входа :80)
 Makefile            единая точка входа для всех команд
 var/                логи контейнеров (bind mount, не в git)
 ```
 
-Контекст для AI-агентов: `AGENT.md` в корне и в каждой из папок.
+Контекст для AI-агентов: `AGENT.md` в корне и в каждой из папок. Описание схемы БД и флоу авторизации — в `docs/` (`DB.md`, `AUTH.md`); план реализации авторизации — `AUTH.md` в корне.
 
 ## Быстрый старт (Docker)
 
 ```bash
 cp .env.example .env
-make up            # mysql, redis, migrate, app (:8080), worker
+make dataset-fetch  # клон датасета упражнений (GIF/миниатюры, ~136 МБ)
+make media-sync     # скопировать GIF/миниатюры в backend/media
+make up             # front-build + mysql, redis, migrate, app, worker, nginx
+make seed-catalog   # залить каталог упражнений (1324 шт., ru/en) — нужен запущенный mysql
 ```
+
+Вход в приложение: http://localhost (nginx раздаёт SPA, `/api` и `/media` — проксирует).
 
 Проверка:
 
 ```bash
-curl localhost:8080/healthz
-curl localhost:8080/ready
-curl -X POST localhost:8080/api/v1/tasks/example -H 'Content-Type: application/json' -d '{"message":"hello"}'
+curl localhost/healthz
+curl localhost/ready
+curl -X POST localhost/api/v1/tasks/example -H 'Content-Type: application/json' -d '{"message":"hello"}'
 ```
 
 Веб-UI очередей asynq: `make ui` → http://localhost:8081.
@@ -101,4 +109,5 @@ gym migrate up|down|status|create NAME
 ## Make-таргеты
 
 Docker: `make up|down|start|stop|logs|ps|ui` · Go: `make run|worker|build|test|vet|tidy|migrate-*` ·
+Данные каталога: `make dataset-fetch|media-sync|seed-catalog` ·
 Тест-инфраструктура: `make test-db-up|test-db-down` · Frontend: `make front-install|front-dev|front-build|front-lint|front-format`
