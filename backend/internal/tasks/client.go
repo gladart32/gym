@@ -31,6 +31,14 @@ func (c *Client) EnqueueDBCleanup(ctx context.Context) (*asynq.TaskInfo, error) 
 	)
 }
 
+func (c *Client) EnqueueSendEmail(ctx context.Context, payload SendEmailPayload) (*asynq.TaskInfo, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return c.client.EnqueueContext(ctx, asynq.NewTask(TypeSendEmail, data))
+}
+
 func (c *Client) Close() error {
 	return c.client.Close()
 }

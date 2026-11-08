@@ -10,12 +10,14 @@
   },
   "common": {
     "email": "Email",
-    "emailPlaceholder": "you@example.com",
+    "emailPlaceholder": "you{'@'}example.com",
     "password": "Пароль",
     "name": "Имя",
     "namePlaceholder": "Иван",
     "login": "Войти",
     "register": "Регистрация",
+    "loading": "Загрузка…",
+    "save": "Сохранить",
     "inDevelopment": "Раздел в разработке"
   },
   "dashboard": {
@@ -45,11 +47,29 @@
     "theme_light": "Светлая",
     "theme_dark": "Тёмная",
     "language": "Язык",
-    "otherLater": "Остальные настройки появятся позже"
+    "otherLater": "Остальные настройки появятся позже",
+    "account": "Аккаунт",
+    "security": "Безопасность",
+    "changePasswordDescription": "Смена пароля; остальные сессии будут завершены",
+    "currentPassword": "Текущий пароль",
+    "newPassword": "Новый пароль",
+    "savePassword": "Сохранить пароль",
+    "passwordChanged": "Пароль изменён",
+    "sessions": "Активные сессии",
+    "sessionsDescription": "Устройства, вошедшие в аккаунт",
+    "thisDevice": "Это устройство",
+    "terminate": "Завершить",
+    "terminateAll": "Завершить все, кроме этой",
+    "lastUsed": "Активность",
+    "sessionTerminated": "Сессия завершена",
+    "allSessionsTerminated": "Другие сессии завершены"
   },
   "notFound": {
     "title": "Страница не найдена",
     "home": "На главную"
+  },
+  "errors": {
+    "serverUnavailable": "Сервер недоступен, попробуйте позже"
   },
   "auth": {
     "loginTitle": "Вход",
@@ -63,16 +83,20 @@
     "createAccount": "Создать аккаунт",
     "resetTitle": "Сброс пароля",
     "resetDescription": "Введите email — пришлём ссылку для восстановления",
+    "resetNewPasswordDescription": "Придумайте новый пароль для аккаунта",
     "resetSent": "Проверьте почту",
+    "resetSuccess": "Пароль сброшен. Войдите с новым паролем.",
     "sendLink": "Отправить ссылку",
     "rememberedPassword": "Вспомнили пароль?",
+    "newPassword": "Новый пароль",
+    "registerSuccess": "Аккаунт создан. Проверьте почту — отправили ссылку для подтверждения.",
     "confirmTitle": "Подтверждение email",
     "confirmPending": "Проверяем ваш токен подтверждения…",
+    "confirmSuccess": "Email подтверждён!",
     "confirmInvalid": "Ссылка для подтверждения недействительна или отсутствует. Запросите новое письмо в настройках профиля.",
     "goToLogin": "Перейти ко входу",
-    "toastLoginNotReady": "Авторизация ещё не подключена",
-    "toastRegisterNotReady": "Регистрация ещё не подключена",
-    "toastEmailNotReady": "Отправка писем ещё не подключена",
+    "logout": "Выйти",
+    "loggedOut": "Вы вышли из аккаунта",
     "toastPasswordsMismatch": "Пароли не совпадают"
   }
 }

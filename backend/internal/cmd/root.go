@@ -28,6 +28,7 @@ func NewRootCommand() *cobra.Command {
 		newServeCommand(),
 		newWorkerCommand(),
 		newMigrateCommand(),
+		newCreateAdminCommand(),
 	)
 
 	return root

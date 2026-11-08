@@ -10,12 +10,14 @@
   },
   "common": {
     "email": "Email",
-    "emailPlaceholder": "you@example.com",
+    "emailPlaceholder": "you{'@'}example.com",
     "password": "Password",
     "name": "Name",
     "namePlaceholder": "John",
     "login": "Sign in",
     "register": "Sign up",
+    "loading": "Loading…",
+    "save": "Save",
     "inDevelopment": "Section under development"
   },
   "dashboard": {
@@ -45,11 +47,29 @@
     "theme_light": "Light",
     "theme_dark": "Dark",
     "language": "Language",
-    "otherLater": "More settings coming later"
+    "otherLater": "More settings coming later",
+    "account": "Account",
+    "security": "Security",
+    "changePasswordDescription": "Change your password; other sessions will be signed out",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "savePassword": "Save password",
+    "passwordChanged": "Password changed",
+    "sessions": "Active sessions",
+    "sessionsDescription": "Devices signed in to your account",
+    "thisDevice": "This device",
+    "terminate": "Terminate",
+    "terminateAll": "Terminate all except this one",
+    "lastUsed": "Last active",
+    "sessionTerminated": "Session terminated",
+    "allSessionsTerminated": "Other sessions terminated"
   },
   "notFound": {
     "title": "Page not found",
     "home": "Go home"
+  },
+  "errors": {
+    "serverUnavailable": "Server is unavailable, please try again later"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -63,16 +83,20 @@
     "createAccount": "Create account",
     "resetTitle": "Password reset",
     "resetDescription": "Enter your email — we will send a recovery link",
+    "resetNewPasswordDescription": "Choose a new password for your account",
     "resetSent": "Check your inbox",
+    "resetSuccess": "Password has been reset. Sign in with the new password.",
     "sendLink": "Send link",
     "rememberedPassword": "Remembered your password?",
+    "newPassword": "New password",
+    "registerSuccess": "Account created. Check your inbox for a confirmation link.",
     "confirmTitle": "Email confirmation",
     "confirmPending": "Verifying your confirmation token…",
+    "confirmSuccess": "Your email is confirmed!",
     "confirmInvalid": "The confirmation link is invalid or missing. Request a new email in your profile settings.",
     "goToLogin": "Go to sign in",
-    "toastLoginNotReady": "Authorization is not wired up yet",
-    "toastRegisterNotReady": "Registration is not wired up yet",
-    "toastEmailNotReady": "Email sending is not wired up yet",
+    "logout": "Sign out",
+    "loggedOut": "You have been signed out",
     "toastPasswordsMismatch": "Passwords do not match"
   }
 }

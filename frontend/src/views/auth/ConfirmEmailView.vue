@@ -1,12 +1,34 @@
 <script setup>
+import { computed, onMounted, ref } from 'vue'
 import { MailCheck } from '@lucide/vue'
 import { RouterLink, useRoute } from 'vue-router'
 
+import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const route = useRoute()
-const token = route.query.token
+
+const token = computed(() => {
+  const value = route.query.token
+  return typeof value === 'string' && value.length > 0 ? value : null
+})
+
+// pending | success | invalid
+const state = ref('pending')
+
+onMounted(async () => {
+  if (!token.value) {
+    state.value = 'invalid'
+    return
+  }
+  try {
+    await authApi.verifyEmail(token.value)
+    state.value = 'success'
+  } catch {
+    state.value = 'invalid'
+  }
+})
 </script>
 
 <template>
@@ -19,7 +41,8 @@ const token = route.query.token
       </div>
       <CardTitle>{{ $t('auth.confirmTitle') }}</CardTitle>
       <CardDescription>
-        <template v-if="token">{{ $t('auth.confirmPending') }}</template>
+        <template v-if="state === 'pending'">{{ $t('auth.confirmPending') }}</template>
+        <template v-else-if="state === 'success'">{{ $t('auth.confirmSuccess') }}</template>
         <template v-else>{{ $t('auth.confirmInvalid') }}</template>
       </CardDescription>
     </CardHeader>

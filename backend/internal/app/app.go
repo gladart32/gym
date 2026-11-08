@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/gladart32/gym/internal/auth"
 	"github.com/gladart32/gym/internal/config"
 	"github.com/gladart32/gym/internal/database"
 	"github.com/gladart32/gym/internal/logger"
@@ -22,6 +23,7 @@ type App struct {
 	DB        *sqlx.DB
 	Redis     *redis.Client
 	Tasks     *tasks.Client
+	Auth      *auth.Service
 	logCloser io.Closer
 }
 
@@ -59,6 +61,7 @@ func New(cfg *config.Config) (*App, error) {
 		DB:        db,
 		Redis:     rdb,
 		Tasks:     tasksClient,
+		Auth:      auth.NewService(db, cfg.Auth, log),
 		logCloser: logCloser,
 	}, nil
 }
@@ -85,7 +88,8 @@ func (a *App) Close() {
 func (a *App) HTTPServer() *server.Server {
 	healthH := handler.NewHealth(a.Log, a.DB, a.Redis)
 	tasksH := handler.NewTasks(a.Log, a.Tasks)
-	return server.New(a.Config, a.Log, healthH, tasksH)
+	authH := handler.NewAuth(a.Log, a.Config, a.Auth, a.Tasks)
+	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth)
 }
 
 // TaskWorker builds the background worker (asynq server + scheduler).

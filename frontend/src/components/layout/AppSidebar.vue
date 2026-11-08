@@ -5,14 +5,17 @@ import {
   Dumbbell,
   LayoutDashboard,
   ListChecks,
+  LogOut,
   Settings,
 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -21,9 +24,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 
 const items = computed(() => [
   { title: t('nav.dashboard'), to: '/', icon: LayoutDashboard },
@@ -32,6 +38,12 @@ const items = computed(() => [
   { title: t('nav.analytics'), to: '/analytics', icon: ChartColumn },
   { title: t('nav.settings'), to: '/settings', icon: Settings },
 ])
+
+async function onLogout() {
+  await auth.logout()
+  toast.info(t('auth.loggedOut'))
+  router.push('/auth/login')
+}
 </script>
 
 <template>
@@ -72,5 +84,22 @@ const items = computed(() => [
         </SidebarGroupContent>
       </SidebarGroup>
     </SidebarContent>
+    <SidebarFooter>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" :tooltip="t('auth.logout')" @click="onLogout">
+            <div
+              class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"
+            >
+              <LogOut class="size-4" />
+            </div>
+            <div class="grid flex-1 text-left text-sm leading-tight">
+              <span class="truncate font-medium">{{ auth.user?.email ?? '' }}</span>
+              <span class="text-muted-foreground truncate text-xs">{{ t('auth.logout') }}</span>
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarFooter>
   </Sidebar>
 </template>

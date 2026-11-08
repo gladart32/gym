@@ -33,6 +33,7 @@ type Config struct {
 	MySQL  MySQL  `mapstructure:"mysql"`
 	Redis  Redis  `mapstructure:"redis"`
 	Asynq  Asynq  `mapstructure:"asynq"`
+	Auth   Auth   `mapstructure:"auth"`
 }
 
 type HTTP struct {
@@ -88,6 +89,16 @@ type Asynq struct {
 	Queues      map[string]int `mapstructure:"queues"`
 }
 
+type Auth struct {
+	JWTSecret        string        `mapstructure:"jwt_secret"`
+	AccessTTL        time.Duration `mapstructure:"access_ttl"`
+	RefreshTTL       time.Duration `mapstructure:"refresh_ttl"`
+	ToleranceSec     int           `mapstructure:"tolerance_sec"`
+	EmailVerifyTTL   time.Duration `mapstructure:"email_verify_ttl"`
+	PasswordResetTTL time.Duration `mapstructure:"password_reset_ttl"`
+	WebBaseURL       string        `mapstructure:"web_base_url"`
+}
+
 // Load reads configuration from the given file: defaults → yaml → GYM_* env overrides.
 // The file must exist; the environment (env key / GYM_ENV) must pass the whitelist.
 func Load(path string) (*Config, error) {
@@ -139,6 +150,8 @@ var envKeys = []string{
 	"mysql.max_open_conns", "mysql.max_idle_conns", "mysql.conn_max_lifetime",
 	"redis.addr", "redis.password", "redis.db",
 	"asynq.concurrency",
+	"auth.jwt_secret", "auth.access_ttl", "auth.refresh_ttl", "auth.tolerance_sec",
+	"auth.email_verify_ttl", "auth.password_reset_ttl", "auth.web_base_url",
 }
 
 func setDefaults(v *viper.Viper) {
@@ -160,6 +173,11 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("redis.db", 0)
 	v.SetDefault("asynq.concurrency", 10)
 	v.SetDefault("asynq.queues", map[string]int{"critical": 6, "default": 3, "maintenance": 1})
+	v.SetDefault("auth.access_ttl", "15m")
+	v.SetDefault("auth.refresh_ttl", "720h")
+	v.SetDefault("auth.tolerance_sec", 10)
+	v.SetDefault("auth.email_verify_ttl", "1h")
+	v.SetDefault("auth.password_reset_ttl", "1h")
 }
 
 func validate(cfg *Config) error {
@@ -187,6 +205,22 @@ func validate(cfg *Config) error {
 		if out == "file" && cfg.Logger.File.Path == "" {
 			return errors.New("config: logger.file.path is required when output \"file\" is enabled")
 		}
+	}
+	if cfg.Env == "prod" && cfg.Auth.JWTSecret == "" {
+		return errors.New("config: auth.jwt_secret is required in prod (set GYM_AUTH_JWT_SECRET)")
+	}
+	if cfg.Auth.JWTSecret != "" && len(cfg.Auth.JWTSecret) < 32 {
+		return fmt.Errorf("config: auth.jwt_secret must be at least 32 bytes, got %d", len(cfg.Auth.JWTSecret))
+	}
+	if cfg.Auth.AccessTTL <= 0 || cfg.Auth.RefreshTTL <= 0 ||
+		cfg.Auth.EmailVerifyTTL <= 0 || cfg.Auth.PasswordResetTTL <= 0 {
+		return errors.New("config: auth token TTLs must be positive")
+	}
+	if cfg.Auth.ToleranceSec < 0 {
+		return fmt.Errorf("config: auth.tolerance_sec must not be negative, got %d", cfg.Auth.ToleranceSec)
+	}
+	if cfg.Auth.WebBaseURL == "" {
+		return errors.New("config: auth.web_base_url is required (frontend base URL for email links)")
 	}
 	return nil
 }

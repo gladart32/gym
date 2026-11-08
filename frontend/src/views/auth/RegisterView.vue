@@ -1,27 +1,39 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
+import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const { t } = useI18n()
+const router = useRouter()
 
 const name = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const loading = ref(false)
 
-function onSubmit() {
+async function onSubmit() {
   if (password.value !== confirmPassword.value) {
     toast.error(t('auth.toastPasswordsMismatch'))
     return
   }
-  toast.info(t('auth.toastRegisterNotReady'))
+  loading.value = true
+  try {
+    await authApi.register({ email: email.value, password: password.value, name: name.value })
+    toast.success(t('auth.registerSuccess'))
+    router.push('/auth/login')
+  } catch (error) {
+    toast.error(error.message)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -77,7 +89,9 @@ function onSubmit() {
             required
           />
         </div>
-        <Button type="submit" class="w-full">{{ $t('auth.createAccount') }}</Button>
+        <Button type="submit" class="w-full" :disabled="loading">
+          {{ loading ? $t('common.loading') : $t('auth.createAccount') }}
+        </Button>
       </form>
       <p class="text-muted-foreground mt-4 text-center text-sm">
         {{ $t('auth.hasAccount') }}

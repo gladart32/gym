@@ -1,21 +1,37 @@
 <script setup>
 import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAuthStore } from '@/stores/auth'
 
-const { t } = useI18n()
+const router = useRouter()
+const route = useRoute()
+const auth = useAuthStore()
 
 const email = ref('')
 const password = ref('')
+const loading = ref(false)
 
-function onSubmit() {
-  toast.info(t('auth.toastLoginNotReady'))
+async function onSubmit() {
+  loading.value = true
+  try {
+    await auth.login(email.value, password.value)
+    const redirect = route.query.redirect
+    const target =
+      typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+        ? redirect
+        : '/'
+    router.push(target)
+  } catch (error) {
+    toast.error(error.message)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -56,7 +72,9 @@ function onSubmit() {
             required
           />
         </div>
-        <Button type="submit" class="w-full">{{ $t('common.login') }}</Button>
+        <Button type="submit" class="w-full" :disabled="loading">
+          {{ loading ? $t('common.loading') : $t('common.login') }}
+        </Button>
       </form>
       <p class="text-muted-foreground mt-4 text-center text-sm">
         {{ $t('auth.noAccount') }}

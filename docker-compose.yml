@@ -10,6 +10,8 @@ x-app-env: &app-env
   GYM_LOGGER_FILE_PATH: /var/log/gym/app.log
   GYM_HTTP_HOST: 0.0.0.0
   GYM_HTTP_PORT: ${GYM_HTTP_PORT:-8080}
+  GYM_AUTH_JWT_SECRET: ${GYM_AUTH_JWT_SECRET:?set GYM_AUTH_JWT_SECRET in .env}
+  GYM_AUTH_WEB_BASE_URL: ${GYM_AUTH_WEB_BASE_URL:?set GYM_AUTH_WEB_BASE_URL in .env}
   GYM_MYSQL_HOST: mysql
   GYM_MYSQL_PORT: 3306
   GYM_MYSQL_USER: ${MYSQL_USER:-gym}
@@ -71,6 +73,8 @@ services:
     restart: unless-stopped
     command: ["serve"]
     environment: *app-env
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
     volumes:
       - ${LOGS_DIR:-./var/log/gym}:/var/log/gym
     depends_on:

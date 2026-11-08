@@ -44,6 +44,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	mux := asynq.NewServeMux()
 	mux.Handle(TypeExample, &Example{Log: w.log})
 	mux.Handle(TypeDBCleanup, NewCleanup(w.log, w.db))
+	mux.Handle(TypeSendEmail, &SendEmail{Log: w.log})
 
 	if err := w.registerSchedules(); err != nil {
 		return fmt.Errorf("register schedules: %w", err)

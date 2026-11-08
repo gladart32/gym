@@ -37,3 +37,12 @@ asynq:
     critical: 6
     default: 3
     maintenance: 1
+
+# jwt_secret задаётся только через GYM_AUTH_JWT_SECRET (>= 32 байт), fail-fast при старте
+auth:
+  access_ttl: "15m"
+  refresh_ttl: "720h"
+  tolerance_sec: 10
+  email_verify_ttl: "1h"
+  password_reset_ttl: "1h"
+  web_base_url: "https://gym.example.com"

@@ -5,12 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/gladart32/gym/internal/auth"
 	"github.com/gladart32/gym/internal/config"
 	"github.com/gladart32/gym/internal/transport/http/handler"
 	"github.com/gladart32/gym/internal/transport/http/middleware"
 )
 
-func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks) *gin.Engine {
+func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service) *gin.Engine {
 	if cfg.Env == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -32,6 +33,26 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 	{
 		api.POST("/tasks/example", tasksH.EnqueueExample)
 		api.POST("/tasks/db-cleanup", tasksH.EnqueueDBCleanup)
+
+		authGroup := api.Group("/auth")
+		{
+			authGroup.POST("/register", authH.Register)
+			authGroup.POST("/login", authH.Login)
+			authGroup.POST("/refresh", authH.Refresh)
+			authGroup.POST("/verify-email", authH.VerifyEmail)
+			authGroup.POST("/forgot-password", authH.ForgotPassword)
+			authGroup.POST("/reset-password", authH.ResetPassword)
+			authGroup.POST("/resend-verification", authH.ResendVerification)
+
+			protected := authGroup.Group("", middleware.Auth(authService))
+			{
+				protected.POST("/logout", authH.Logout)
+				protected.GET("/sessions", authH.ListSessions)
+				protected.DELETE("/sessions/:id", authH.RevokeSessionByID)
+				protected.POST("/sessions/revoke-all", authH.RevokeAllSessions)
+				protected.POST("/password", authH.ChangePassword)
+			}
+		}
 	}
 
 	return r

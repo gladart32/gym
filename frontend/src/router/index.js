@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { i18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,6 +9,7 @@ const router = createRouter({
     {
       path: '/',
       component: () => import('@/layouts/DefaultLayout.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: '',
@@ -56,19 +58,19 @@ const router = createRouter({
           path: 'login',
           name: 'login',
           component: () => import('@/views/auth/LoginView.vue'),
-          meta: { title: 'auth.loginTitle' },
+          meta: { title: 'auth.loginTitle', guestOnly: true },
         },
         {
           path: 'register',
           name: 'register',
           component: () => import('@/views/auth/RegisterView.vue'),
-          meta: { title: 'auth.registerTitle' },
+          meta: { title: 'auth.registerTitle', guestOnly: true },
         },
         {
           path: 'reset-password',
           name: 'reset-password',
           component: () => import('@/views/auth/ResetPasswordView.vue'),
-          meta: { title: 'auth.resetTitle' },
+          meta: { title: 'auth.resetTitle', guestOnly: true },
         },
         {
           path: 'confirm-email',
@@ -79,6 +81,17 @@ const router = createRouter({
       ],
     },
   ],
+})
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  await auth.boot()
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.guestOnly && auth.isAuthenticated) {
+    return { path: '/' }
+  }
 })
 
 router.afterEach((to) => {

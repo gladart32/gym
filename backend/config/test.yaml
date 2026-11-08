@@ -36,3 +36,12 @@ asynq:
     critical: 6
     default: 3
     maintenance: 1
+
+auth:
+  jwt_secret: "test-only-secret-32-bytes-aaaaaaaaaa"
+  access_ttl: "1m"
+  refresh_ttl: "1h"
+  tolerance_sec: 0
+  email_verify_ttl: "30s"
+  password_reset_ttl: "30s"
+  web_base_url: "http://localhost:5173"
