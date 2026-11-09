@@ -48,6 +48,12 @@ const router = createRouter({
           meta: { title: 'nav.profile' },
         },
         {
+          path: 'profile/measurements',
+          name: 'measurements',
+          component: () => import('@/views/MeasurementsView.vue'),
+          meta: { title: 'profile.measurements' },
+        },
+        {
           path: 'settings',
           name: 'settings',
           component: () => import('@/views/SettingsView.vue'),

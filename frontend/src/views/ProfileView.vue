@@ -87,6 +87,11 @@ const currentBody = computed(() => {
   return t('profile.currentBody', { weight, height })
 })
 
+// В карточке профиля показываем только 3 последних замера,
+// полная история — на отдельной странице.
+const recentMeasurements = computed(() => measurements.value.slice(0, 3))
+const hasMoreMeasurements = computed(() => measurements.value.length > 3)
+
 function equipmentName(item) {
   return locale.value === 'ru' ? item.name_ru || item.name_en : item.name_en || item.name_ru
 }
@@ -403,7 +408,7 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="m in measurements" :key="m.id" class="border-b">
+            <tr v-for="m in recentMeasurements" :key="m.id" class="border-b">
               <td class="py-2 pr-4">{{ formatDate(m.measured_on) }}</td>
               <td class="py-2 pr-4">
                 {{ m.weight_kg != null ? `${m.weight_kg} ${$t('profile.kg')}` : '—' }}
@@ -424,6 +429,11 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
+        <Button v-if="hasMoreMeasurements" variant="outline" size="sm" class="w-fit" as-child>
+          <RouterLink to="/profile/measurements">
+            {{ $t('profile.viewAllMeasurements') }}
+          </RouterLink>
+        </Button>
       </CardContent>
     </Card>
 
