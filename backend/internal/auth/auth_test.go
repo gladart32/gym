@@ -49,6 +49,8 @@ func setup(t *testing.T) (*gin.Engine, *app.App) {
 		handler.NewTasks(a.Log, a.Tasks),
 		handler.NewAuth(a.Log, a.Config, a.Auth, a.Tasks),
 		a.Auth,
+		handler.NewProfile(a.Log, a.Profile),
+		a.Profile,
 	)
 	return router, a
 }
@@ -387,8 +389,8 @@ func TestWebLoginSetsRefreshCookie(t *testing.T) {
 	registerVerified(t, router, a, email)
 
 	rec, _ := doJSON(t, router, http.MethodPost, "/api/v1/auth/login", "", "", map[string]string{
-		"email":    email,
-		"password": testPassword,
+		"email":       email,
+		"password":    testPassword,
 		"client_type": "web",
 	})
 	if rec.Code != http.StatusOK {

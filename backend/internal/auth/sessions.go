@@ -229,7 +229,12 @@ func (s *Service) handlePrevToken(ctx context.Context, hash []byte) error {
 	}
 
 	cutoff := time.Now().UTC().Add(-time.Duration(s.cfg.ToleranceSec) * time.Second)
-	if prev.LastUsedAt.After(cutoff) {
+	// Окно терпимости проверяется только при tolerance > 0: DATETIME хранит
+	// секунды с округлением вверх, поэтому при tolerance_sec = 0 записанный
+	// в ту же секунду last_used_at может оказаться «в будущем» относительно
+	// наносекундного cutoff — любое повторное использование предыдущего
+	// токена в этом режиме означает кражу и должно отзывать сессию.
+	if s.cfg.ToleranceSec > 0 && prev.LastUsedAt.After(cutoff) {
 		return ErrTokenInvalid
 	}
 

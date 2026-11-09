@@ -9,6 +9,7 @@ import (
 
 	"github.com/gladart32/gym/internal/auth"
 	"github.com/gladart32/gym/internal/config"
+	"github.com/gladart32/gym/internal/profile"
 	"github.com/gladart32/gym/internal/transport/http/handler"
 )
 
@@ -17,8 +18,8 @@ type Server struct {
 	log        *slog.Logger
 }
 
-func New(cfg *config.Config, log *slog.Logger, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service) *Server {
-	router := NewRouter(log, cfg, health, tasksH, authH, authService)
+func New(cfg *config.Config, log *slog.Logger, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service) *Server {
+	router := NewRouter(log, cfg, health, tasksH, authH, authService, profileH, profileService)
 
 	return &Server{
 		httpServer: &http.Server{

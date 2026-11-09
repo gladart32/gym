@@ -12,6 +12,7 @@ import (
 	"github.com/gladart32/gym/internal/config"
 	"github.com/gladart32/gym/internal/database"
 	"github.com/gladart32/gym/internal/logger"
+	"github.com/gladart32/gym/internal/profile"
 	"github.com/gladart32/gym/internal/server"
 	"github.com/gladart32/gym/internal/tasks"
 	"github.com/gladart32/gym/internal/transport/http/handler"
@@ -24,6 +25,7 @@ type App struct {
 	Redis     *redis.Client
 	Tasks     *tasks.Client
 	Auth      *auth.Service
+	Profile   *profile.Service
 	logCloser io.Closer
 }
 
@@ -62,6 +64,7 @@ func New(cfg *config.Config) (*App, error) {
 		Redis:     rdb,
 		Tasks:     tasksClient,
 		Auth:      auth.NewService(db, cfg.Auth, log),
+		Profile:   profile.NewService(db, log),
 		logCloser: logCloser,
 	}, nil
 }
@@ -89,7 +92,8 @@ func (a *App) HTTPServer() *server.Server {
 	healthH := handler.NewHealth(a.Log, a.DB, a.Redis)
 	tasksH := handler.NewTasks(a.Log, a.Tasks)
 	authH := handler.NewAuth(a.Log, a.Config, a.Auth, a.Tasks)
-	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth)
+	profileH := handler.NewProfile(a.Log, a.Profile)
+	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth, profileH, a.Profile)
 }
 
 // TaskWorker builds the background worker (asynq server + scheduler).

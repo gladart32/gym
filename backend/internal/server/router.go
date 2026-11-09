@@ -7,11 +7,12 @@ import (
 
 	"github.com/gladart32/gym/internal/auth"
 	"github.com/gladart32/gym/internal/config"
+	"github.com/gladart32/gym/internal/profile"
 	"github.com/gladart32/gym/internal/transport/http/handler"
 	"github.com/gladart32/gym/internal/transport/http/middleware"
 )
 
-func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service) *gin.Engine {
+func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service) *gin.Engine {
 	if cfg.Env == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -52,6 +53,17 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 				protected.POST("/sessions/revoke-all", authH.RevokeAllSessions)
 				protected.POST("/password", authH.ChangePassword)
 			}
+		}
+
+		profileGroup := api.Group("/profile", middleware.Auth(authService))
+		{
+			profileGroup.GET("", profileH.Get)
+			profileGroup.PUT("", profileH.Update)
+			profileGroup.GET("/measurements", profileH.ListMeasurements)
+			profileGroup.POST("/measurements", profileH.UpsertMeasurement)
+			profileGroup.DELETE("/measurements/:id", profileH.DeleteMeasurement)
+			profileGroup.GET("/equipment", profileH.Equipment)
+			profileGroup.PUT("/equipment", profileH.ReplaceEquipment)
 		}
 	}
 

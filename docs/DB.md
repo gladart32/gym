@@ -28,7 +28,9 @@ users ─┬─< login_sessions        (сессии входа)
        ├─< email_action_tokens   (токены из писем)
        ├─< programs (owner_id, личные программы)
        ├─< user_programs ─< user_schedule_rules >─ program_days
-       └─< workouts ─< workout_exercises ─< workout_sets
+       ├─| user_profiles                     (профиль, 1:1)
+       ├─< body_measurements               (история веса/роста)
+       └─< user_equipment >─ equipment     (инвентарь пользователя)
 
 body_parts ─┐
 equipment  ─┼─< exercises ─┬─< exercise_translations
@@ -108,6 +110,44 @@ workout_exercises >─ exercises, program_exercises
 | `expires_at` | DATETIME | До какого момента действует |
 | `used_at` | DATETIME NULL | Когда использован |
 | `created_at` | DATETIME | |
+
+### `user_profiles`: профиль пользователя (1:1 с `users`)
+
+Статические данные профиля. Всё необязательно: строка создаётся при первом сохранении (upsert), пустые поля — «не указано». Отдельная таблица вместо колонок в `users`, чтобы не смешивать auth и профиль. `fitness_level` использует те же значения, что и `programs.level`, — основа для алгоритма подбора тренировок.
+
+| Колонка | Тип | Описание |
+|---|---|---|
+| `user_id` | INT UNSIGNED PK, FK → `users` | 1:1 с пользователем |
+| `gender` | ENUM(`male`,`female`) NULL | Пол; нужен для расчёта калорий и норм |
+| `birth_date` | DATE NULL | Дата рождения; CHECK — не раньше `1900-01-01`, «не в будущем» проверяет приложение |
+| `target_weight_kg` | DECIMAL(5,2) NULL | Целевой вес, 20–500 кг |
+| `fitness_level` | ENUM(`beginner`,`intermediate`,`advanced`) NULL | Уровень физической подготовки |
+| `created_at`, `updated_at` | DATETIME | Служебные метки |
+
+Опыт тренировок отдельным полем не хранится — его отражает `fitness_level`.
+
+### `body_measurements`: история замеров веса и роста
+
+Вес и рост — не поля профиля, а история: один замер на дату, повторный ввод за тот же день перезаписывает строку (upsert по `uq_body_measurements_user_date`). «Текущий вес/рост» — последний замер по дате, нигде не дублируется. Пример: 01.11 — 85 кг / 180 см; 08.11 — 84.5 кг / 180 см; 15.11 — 84 кг / 180 см.
+
+| Колонка | Тип | Описание |
+|---|---|---|
+| `id` | BIGINT UNSIGNED PK | |
+| `user_id` | FK → `users` | Владелец |
+| `measured_on` | DATE | Дата замера; UNIQUE вместе с `user_id` — один замер в день |
+| `weight_kg` | DECIMAL(5,2) NULL | Вес, 20–500 кг; CHECK — хотя бы один из веса/роста задан |
+| `height_cm` | DECIMAL(5,1) NULL | Рост, 50–300 см |
+| `created_at`, `updated_at` | DATETIME | Служебные метки |
+
+### `user_equipment`: инвентарь пользователя
+
+Какое оборудование есть у пользователя. Ссылки на каталог `equipment` (те же `id`, что в `exercises.equipment_id`) — в будущем фильтр упражнений и программ по доступному инвентарю.
+
+| Колонка | Тип | Описание |
+|---|---|---|
+| `user_id` | INT UNSIGNED, PK-часть, FK → `users` | |
+| `equipment_id` | SMALLINT UNSIGNED, PK-часть, FK → `equipment` | Позиция каталога |
+| `created_at` | DATETIME | Когда добавлено |
 
 ---
 
