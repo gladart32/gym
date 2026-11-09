@@ -59,6 +59,7 @@ async function onSubmit() {
             <Label for="password">{{ $t('common.password') }}</Label>
             <RouterLink
               to="/auth/reset-password"
+              tabindex="-1"
               class="text-muted-foreground text-sm hover:underline"
             >
               {{ $t('auth.forgotPassword') }}

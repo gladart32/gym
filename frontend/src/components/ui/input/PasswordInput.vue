@@ -42,6 +42,7 @@ const show = ref(false)
     />
     <button
       type="button"
+      tabindex="-1"
       class="text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 flex w-9 cursor-pointer items-center justify-center outline-none"
       :aria-label="show ? t('common.hidePassword') : t('common.showPassword')"
       :aria-pressed="show"
