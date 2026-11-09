@@ -5,7 +5,7 @@ import { toast } from 'vue-sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Input, PasswordInput } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/stores/auth'
 
@@ -64,10 +64,9 @@ async function onSubmit() {
               {{ $t('auth.forgotPassword') }}
             </RouterLink>
           </div>
-          <Input
+          <PasswordInput
             id="password"
             v-model="password"
-            type="password"
             autocomplete="current-password"
             required
           />

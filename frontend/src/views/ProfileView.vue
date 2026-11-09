@@ -9,7 +9,7 @@ import { authApi } from '@/api/auth'
 import { profileApi } from '@/api/profile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Input, PasswordInput } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useAuthStore } from '@/stores/auth'
@@ -476,20 +476,18 @@ onMounted(() => {
         <form class="flex max-w-sm flex-col gap-4" @submit.prevent="onChangePassword">
           <div class="grid gap-2">
             <Label for="current-password">{{ $t('profile.currentPassword') }}</Label>
-            <Input
+            <PasswordInput
               id="current-password"
               v-model="currentPassword"
-              type="password"
               autocomplete="current-password"
               required
             />
           </div>
           <div class="grid gap-2">
             <Label for="new-password">{{ $t('profile.newPassword') }}</Label>
-            <Input
+            <PasswordInput
               id="new-password"
               v-model="newPassword"
-              type="password"
               autocomplete="new-password"
               minlength="8"
               required
@@ -497,10 +495,9 @@ onMounted(() => {
           </div>
           <div class="grid gap-2">
             <Label for="confirm-password">{{ $t('auth.confirmPassword') }}</Label>
-            <Input
+            <PasswordInput
               id="confirm-password"
               v-model="confirmPassword"
-              type="password"
               autocomplete="new-password"
               minlength="8"
               required

@@ -14,6 +14,8 @@
     "email": "Email",
     "emailPlaceholder": "you{'@'}example.com",
     "password": "Пароль",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль",
     "name": "Имя",
     "namePlaceholder": "Иван",
     "login": "Войти",

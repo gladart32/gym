@@ -7,7 +7,7 @@ import { toast } from 'vue-sonner'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Input, PasswordInput } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const { t } = useI18n()
@@ -84,10 +84,9 @@ async function onResetPassword() {
       <form v-else class="flex flex-col gap-4" @submit.prevent="onResetPassword">
         <div class="grid gap-2">
           <Label for="password">{{ $t('auth.newPassword') }}</Label>
-          <Input
+          <PasswordInput
             id="password"
             v-model="password"
-            type="password"
             autocomplete="new-password"
             minlength="8"
             required
@@ -95,10 +94,9 @@ async function onResetPassword() {
         </div>
         <div class="grid gap-2">
           <Label for="confirm-password">{{ $t('auth.confirmPassword') }}</Label>
-          <Input
+          <PasswordInput
             id="confirm-password"
             v-model="confirmPassword"
-            type="password"
             autocomplete="new-password"
             minlength="8"
             required
