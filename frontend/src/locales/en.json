@@ -3,9 +3,11 @@
     "menu": "Menu",
     "tagline": "workout tracker",
     "dashboard": "Home",
+    "calendar": "Calendar",
     "workouts": "Workouts",
     "exercises": "Exercises",
     "analytics": "Analytics",
+    "profile": "Profile",
     "settings": "Settings"
   },
   "common": {
@@ -32,22 +34,10 @@
     "description": "Workout log will be here",
     "start": "Start workout"
   },
-  "exercises": {
-    "description": "Exercise catalog will be here",
-    "add": "Add exercise"
+  "calendar": {
+    "description": "Your workout schedule will be here"
   },
-  "analytics": {
-    "description": "Progress charts will be here"
-  },
-  "settings": {
-    "appearance": "Appearance",
-    "appearanceDescription": "Interface settings",
-    "theme": "Theme",
-    "theme_auto": "System",
-    "theme_light": "Light",
-    "theme_dark": "Dark",
-    "language": "Language",
-    "otherLater": "More settings coming later",
+  "profile": {
     "account": "Account",
     "security": "Security",
     "changePasswordDescription": "Change your password; other sessions will be signed out",
@@ -63,6 +53,23 @@
     "lastUsed": "Last active",
     "sessionTerminated": "Session terminated",
     "allSessionsTerminated": "Other sessions terminated"
+  },
+  "exercises": {
+    "description": "Exercise catalog will be here",
+    "add": "Add exercise"
+  },
+  "analytics": {
+    "description": "Progress charts will be here"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "appearanceDescription": "Interface settings",
+    "theme": "Theme",
+    "theme_auto": "System",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "language": "Language",
+    "otherLater": "More settings coming later"
   },
   "notFound": {
     "title": "Page not found",
@@ -97,6 +104,8 @@
     "goToLogin": "Go to sign in",
     "logout": "Sign out",
     "loggedOut": "You have been signed out",
+    "roleUser": "User",
+    "roleAdmin": "Administrator",
     "toastPasswordsMismatch": "Passwords do not match"
   }
 }

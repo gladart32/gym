@@ -18,6 +18,12 @@ const router = createRouter({
           meta: { title: 'nav.dashboard' },
         },
         {
+          path: 'calendar',
+          name: 'calendar',
+          component: () => import('@/views/CalendarView.vue'),
+          meta: { title: 'nav.calendar' },
+        },
+        {
           path: 'workouts',
           name: 'workouts',
           component: () => import('@/views/WorkoutsView.vue'),
@@ -34,6 +40,12 @@ const router = createRouter({
           name: 'analytics',
           component: () => import('@/views/AnalyticsView.vue'),
           meta: { title: 'nav.analytics' },
+        },
+        {
+          path: 'profile',
+          name: 'profile',
+          component: () => import('@/views/ProfileView.vue'),
+          meta: { title: 'nav.profile' },
         },
         {
           path: 'settings',

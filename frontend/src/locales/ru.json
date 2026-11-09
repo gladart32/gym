@@ -3,9 +3,11 @@
     "menu": "Меню",
     "tagline": "трекер тренировок",
     "dashboard": "Главная",
+    "calendar": "Календарь",
     "workouts": "Тренировки",
     "exercises": "Упражнения",
     "analytics": "Аналитика",
+    "profile": "Профиль",
     "settings": "Настройки"
   },
   "common": {
@@ -32,22 +34,10 @@
     "description": "Здесь будет журнал тренировок",
     "start": "Начать тренировку"
   },
-  "exercises": {
-    "description": "Здесь будет справочник упражнений",
-    "add": "Добавить упражнение"
+  "calendar": {
+    "description": "Здесь будет расписание ваших тренировок"
   },
-  "analytics": {
-    "description": "Здесь будут графики прогресса"
-  },
-  "settings": {
-    "appearance": "Внешний вид",
-    "appearanceDescription": "Настройки интерфейса",
-    "theme": "Тема",
-    "theme_auto": "Системная",
-    "theme_light": "Светлая",
-    "theme_dark": "Тёмная",
-    "language": "Язык",
-    "otherLater": "Остальные настройки появятся позже",
+  "profile": {
     "account": "Аккаунт",
     "security": "Безопасность",
     "changePasswordDescription": "Смена пароля; остальные сессии будут завершены",
@@ -63,6 +53,23 @@
     "lastUsed": "Активность",
     "sessionTerminated": "Сессия завершена",
     "allSessionsTerminated": "Другие сессии завершены"
+  },
+  "exercises": {
+    "description": "Здесь будет справочник упражнений",
+    "add": "Добавить упражнение"
+  },
+  "analytics": {
+    "description": "Здесь будут графики прогресса"
+  },
+  "settings": {
+    "appearance": "Внешний вид",
+    "appearanceDescription": "Настройки интерфейса",
+    "theme": "Тема",
+    "theme_auto": "Системная",
+    "theme_light": "Светлая",
+    "theme_dark": "Тёмная",
+    "language": "Язык",
+    "otherLater": "Остальные настройки появятся позже"
   },
   "notFound": {
     "title": "Страница не найдена",
@@ -97,6 +104,8 @@
     "goToLogin": "Перейти ко входу",
     "logout": "Выйти",
     "loggedOut": "Вы вышли из аккаунта",
+    "roleUser": "Пользователь",
+    "roleAdmin": "Администратор",
     "toastPasswordsMismatch": "Пароли не совпадают"
   }
 }
