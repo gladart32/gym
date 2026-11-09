@@ -12,9 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input, PasswordInput } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/stores/auth'
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -95,6 +96,15 @@ const hasMoreMeasurements = computed(() => measurements.value.length > 3)
 function equipmentName(item) {
   return locale.value === 'ru' ? item.name_ru || item.name_en : item.name_en || item.name_ru
 }
+
+// Подсказка «что это такое» из локалей, по code из каталога;
+// если для кода нет перевода — тултип просто не показываем.
+const equipmentOptions = computed(() =>
+  equipmentItems.value.map((item) => {
+    const key = `profile.equipmentHints.${item.code}`
+    return { ...item, hint: te(key, locale.value) ? t(key) : '' }
+  }),
+)
 
 async function loadSessions() {
   sessionsLoading.value = true
@@ -446,16 +456,25 @@ onMounted(() => {
         <p v-if="equipmentLoading" class="text-muted-foreground text-sm">
           {{ $t('common.loading') }}
         </p>
-        <div v-else class="flex max-w-2xl flex-wrap gap-2">
-          <Button
-            v-for="item in equipmentItems"
-            :key="item.id"
-            :variant="selectedEquipment.includes(item.id) ? 'default' : 'outline'"
-            size="sm"
-            @click="toggleEquipment(item.id)"
-          >
-            {{ equipmentName(item) }}
-          </Button>
+        <div v-else class="max-w-2xl">
+          <TooltipProvider :delay-duration="200">
+            <div class="flex flex-wrap gap-2">
+              <Tooltip v-for="item in equipmentOptions" :key="item.id">
+                <TooltipTrigger as-child>
+                  <Button
+                    :variant="selectedEquipment.includes(item.id) ? 'default' : 'outline'"
+                    size="sm"
+                    @click="toggleEquipment(item.id)"
+                  >
+                    {{ equipmentName(item) }}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent v-if="item.hint" class="max-w-60 text-wrap">
+                  {{ item.hint }}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         </div>
         <Button
           class="w-fit"
