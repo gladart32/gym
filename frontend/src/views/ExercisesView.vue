@@ -1,12 +1,9 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { RotateCcw, Search, SlidersHorizontal } from '@lucide/vue'
-import { refDebounced } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
 
-import { exercisesApi } from '@/api/exercises'
-import { profileApi } from '@/api/profile'
 import ExerciseCard from '@/components/exercises/ExerciseCard.vue'
 import ExerciseDetailDialog from '@/components/exercises/ExerciseDetailDialog.vue'
 import ExerciseFiltersPanel from '@/components/exercises/ExerciseFiltersPanel.vue'
@@ -36,98 +33,37 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-
-const PER_PAGE = 20
+import { PER_PAGE, useExercisesStore } from '@/stores/exercises'
 
 const route = useRoute()
 const router = useRouter()
+const store = useExercisesStore()
 
-const q = ref('')
-const qDebounced = refDebounced(q, 400)
-const sort = ref('name')
-const page = ref(1)
-const bodyPartIds = ref([])
-const equipmentIds = ref([])
-const muscleIds = ref([])
-const trackingTypes = ref([])
-const myEquipment = ref(false)
-const favoritesOnly = ref(false)
+const {
+  q,
+  qDebounced,
+  sort,
+  page,
+  bodyPartIds,
+  equipmentIds,
+  muscleIds,
+  trackingTypes,
+  myEquipment,
+  favoritesOnly,
+  dictionaries,
+  hasUserEquipment,
+  trackingTypeNames,
+  items,
+  total,
+  pages,
+  loading,
+} = storeToRefs(store)
 
-const dictionaries = ref(null)
-const hasUserEquipment = ref(false)
-const trackingTypeNames = ref({})
-
-const items = ref([])
-const total = ref(0)
-const pages = ref(0)
-const loading = ref(false)
-const metaLoading = ref(true)
+const { activeFilterCount, hasActiveFilters, rangeFrom, rangeTo, showSkeleton } = storeToRefs(store)
 
 const mobileFiltersOpen = ref(false)
 const detailOpen = ref(false)
 const detailExerciseId = ref(null)
-
-const activeFilterCount = computed(
-  () =>
-    bodyPartIds.value.length +
-    equipmentIds.value.length +
-    muscleIds.value.length +
-    trackingTypes.value.length +
-    (myEquipment.value ? 1 : 0) +
-    (favoritesOnly.value ? 1 : 0),
-)
-
-const hasActiveFilters = computed(() => activeFilterCount.value > 0 || q.value.trim() !== '')
-
-const rangeFrom = computed(() => (total.value === 0 ? 0 : (page.value - 1) * PER_PAGE + 1))
-const rangeTo = computed(() => Math.min(page.value * PER_PAGE, total.value))
-
-const showSkeleton = computed(
-  () => metaLoading.value || (loading.value && items.value.length === 0),
-)
-
-let requestSeq = 0
-let lastParamsKey = ''
-
-function listParams(instant) {
-  const search = (instant ? q.value : qDebounced.value).trim()
-  const params = { page: page.value, per_page: PER_PAGE, sort: sort.value }
-  if (search) params.q = search
-  if (bodyPartIds.value.length) params.body_part_ids = bodyPartIds.value.join(',')
-  if (equipmentIds.value.length) params.equipment_ids = equipmentIds.value.join(',')
-  if (muscleIds.value.length) params.muscle_ids = muscleIds.value.join(',')
-  if (trackingTypes.value.length) params.tracking_types = trackingTypes.value.join(',')
-  if (myEquipment.value) params.my_equipment = 1
-  if (favoritesOnly.value) params.favorites_only = 1
-  return params
-}
-
-async function loadList({ instant = false } = {}) {
-  const params = listParams(instant)
-  const key = JSON.stringify(params)
-  if (key === lastParamsKey) return
-  lastParamsKey = key
-
-  const seq = ++requestSeq
-  loading.value = true
-  try {
-    const data = await exercisesApi.list(params)
-    if (seq !== requestSeq) return
-    items.value = data.items ?? []
-    total.value = data.total ?? 0
-    pages.value = data.pages ?? 0
-    if (page.value > pages.value && pages.value > 0) {
-      page.value = pages.value
-      return
-    }
-  } catch (error) {
-    if (seq !== requestSeq) return
-    lastParamsKey = ''
-    toast.error(error.message)
-  } finally {
-    if (seq === requestSeq) loading.value = false
-  }
-}
 
 function syncUrl() {
   const query = {}
@@ -143,107 +79,9 @@ function syncUrl() {
   router.replace({ query })
 }
 
-function resetFilters() {
-  q.value = ''
-  bodyPartIds.value = []
-  equipmentIds.value = []
-  muscleIds.value = []
-  trackingTypes.value = []
-  myEquipment.value = false
-  favoritesOnly.value = false
-  sort.value = 'name'
-  page.value = 1
-}
-
-async function toggleFavorite(exercise) {
-  const target = !exercise.is_favorite
-  exercise.is_favorite = target
-  try {
-    if (target) {
-      await exercisesApi.addFavorite(exercise.id)
-    } else {
-      await exercisesApi.removeFavorite(exercise.id)
-      if (favoritesOnly.value) {
-        lastParamsKey = ''
-        await loadList()
-      }
-    }
-  } catch (error) {
-    exercise.is_favorite = !target
-    toast.error(error.message)
-  }
-}
-
-function onFiltersChanged() {
-  if (page.value === 1) {
-    loadList()
-  } else {
-    page.value = 1
-  }
-}
-
 function onPageSelected(value) {
   page.value = value
   window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-initFromUrl()
-
-watch(
-  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort],
-  () => {
-    onFiltersChanged()
-  },
-)
-
-watch(page, () => loadList())
-
-watch(
-  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort, page],
-  syncUrl,
-)
-
-function parseIdsParam(value) {
-  if (!value) return []
-  return String(value)
-    .split(',')
-    .map(Number)
-    .filter((n) => Number.isInteger(n) && n > 0)
-}
-
-function initFromUrl() {
-  const query = route.query
-  if (typeof query.q === 'string') q.value = query.q
-  if (query.sort === 'newest' || query.sort === 'name') sort.value = query.sort
-  const p = Number(query.page)
-  if (Number.isInteger(p) && p > 0) page.value = p
-  bodyPartIds.value = parseIdsParam(query.bp)
-  equipmentIds.value = parseIdsParam(query.eq)
-  muscleIds.value = parseIdsParam(query.mu)
-  if (typeof query.tt === 'string') {
-    trackingTypes.value = query.tt.split(',').filter((v) => v)
-  }
-  myEquipment.value = query.my === '1'
-  favoritesOnly.value = query.fav === '1'
-}
-
-async function loadMeta() {
-  metaLoading.value = true
-  try {
-    const [filtersData, equipmentData] = await Promise.all([
-      exercisesApi.filters(),
-      profileApi.equipment(),
-    ])
-    dictionaries.value = filtersData
-    trackingTypeNames.value = Object.fromEntries(
-      (filtersData.tracking_types ?? []).map((tt) => [tt.value, tt.name]),
-    )
-    hasUserEquipment.value = (equipmentData.selected_ids ?? []).length > 0
-  } catch (error) {
-    toast.error(error.message)
-  } finally {
-    metaLoading.value = false
-  }
 }
 
 function openExercise(exercise) {
@@ -251,9 +89,25 @@ function openExercise(exercise) {
   detailOpen.value = true
 }
 
+// Поиск (q/qDebounced) не в watcher: debounce и загрузку запускает store.setQ
+watch(
+  [bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort],
+  () => {
+    store.onFiltersChanged()
+  },
+)
+
+watch(page, () => store.loadList())
+
+watch(
+  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort, page],
+  syncUrl,
+)
+
 onMounted(() => {
-  loadMeta()
-  loadList({ instant: true })
+  store.initFromUrl(route.query)
+  store.loadMeta()
+  store.loadList({ instant: true })
 })
 </script>
 
@@ -267,7 +121,12 @@ onMounted(() => {
           <Search
             class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
           />
-          <Input v-model="q" :placeholder="$t('exercises.searchPlaceholder')" class="pl-8" />
+          <Input
+            :model-value="q"
+            :placeholder="$t('exercises.searchPlaceholder')"
+            class="pl-8"
+            @update:model-value="store.setQ"
+          />
         </div>
         <Select v-model="sort">
           <SelectTrigger class="w-44">
@@ -302,7 +161,7 @@ onMounted(() => {
           variant="ghost"
           size="sm"
           class="text-muted-foreground"
-          @click="resetFilters"
+          @click="store.resetFilters"
         >
           <RotateCcw />
           {{ $t('exercises.resetFilters') }}
@@ -351,7 +210,7 @@ onMounted(() => {
             variant="outline"
             size="sm"
             class="mt-2"
-            @click="resetFilters"
+            @click="store.resetFilters"
           >
             <RotateCcw />
             {{ $t('exercises.resetFilters') }}
@@ -368,7 +227,7 @@ onMounted(() => {
               :key="exercise.id"
               :exercise="exercise"
               @open="openExercise"
-              @toggle-favorite="toggleFavorite"
+              @toggle-favorite="store.toggleFavorite"
             />
           </div>
 
@@ -433,7 +292,7 @@ onMounted(() => {
           variant="outline"
           size="sm"
           class="w-fit"
-          @click="resetFilters"
+          @click="store.resetFilters"
         >
           <RotateCcw />
           {{ $t('exercises.resetFilters') }}

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { authApi } from '@/api/auth'
+import { useExercisesStore } from '@/stores/exercises'
 
 const REFRESH_MARGIN_MS = 10_000
 
@@ -61,6 +62,8 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = null
       this.tokenExpiresAt = 0
       this.user = null
+      // кэш упражнений (избранное, мой инвентарь) — пользователь-специфичный
+      useExercisesStore().$reset()
     },
 
     async logout() {

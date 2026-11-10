@@ -14,10 +14,12 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/stores/auth'
+import { useExercisesStore } from '@/stores/exercises'
 
 const { t, te, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const exercisesStore = useExercisesStore()
 
 const sessions = ref([])
 const sessionsLoading = ref(true)
@@ -230,6 +232,8 @@ async function saveEquipment() {
   try {
     const data = await profileApi.replaceEquipment(selectedEquipment.value)
     selectedEquipment.value = data.selected_ids
+    // инвентарь влияет на фильтры и выдачу упражнений — сбрасываем кэш раздела
+    exercisesStore.invalidateCache()
     toast.success(t('profile.equipmentSaved'))
   } catch (error) {
     toast.error(error.message)
