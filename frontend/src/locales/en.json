@@ -133,6 +133,7 @@
     "muscle": "Target muscle",
     "trackingType": "Exercise type",
     "favorites": "Favorites",
+    "favoritesHint": "Only exercises you marked with a heart",
     "myEquipment": "My equipment",
     "myEquipmentHint": "Only exercises with your equipment or none required",
     "addToFavorites": "Add to favorites",

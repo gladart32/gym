@@ -182,6 +182,11 @@ function onFiltersChanged() {
   }
 }
 
+function onPageSelected(value) {
+  page.value = value
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 initFromUrl()
 
 watch(
@@ -376,7 +381,7 @@ onMounted(() => {
             :sibling-count="1"
             show-edges
             class="justify-center"
-            @update:page="(value) => (page = value)"
+            @update:page="onPageSelected"
           >
             <PaginationContent v-slot="{ items: pageItems }">
               <PaginationPrevious>
