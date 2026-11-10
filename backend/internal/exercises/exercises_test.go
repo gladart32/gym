@@ -37,12 +37,13 @@ type mediaJSON struct {
 }
 
 type itemJSON struct {
-	ID           uint16   `json:"id"`
-	Name         string   `json:"name"`
-	BodyPart     refJSON  `json:"body_part"`
-	Equipment    refJSON  `json:"equipment"`
-	TargetMuscle refJSON  `json:"target_muscle"`
-	TrackingType string   `json:"tracking_type"`
+	ID           uint16    `json:"id"`
+	Name         string    `json:"name"`
+	BodyPart     refJSON   `json:"body_part"`
+	Equipment    refJSON   `json:"equipment"`
+	TargetMuscle refJSON   `json:"target_muscle"`
+	TrackingType string    `json:"tracking_type"`
+	IsFavorite   bool      `json:"is_favorite"`
 	Media        mediaJSON `json:"media"`
 }
 
@@ -64,6 +65,7 @@ type detailJSON struct {
 	TargetMuscle     refJSON     `json:"target_muscle"`
 	SecondaryMuscles []refJSON   `json:"secondary_muscles"`
 	TrackingType     string      `json:"tracking_type"`
+	IsFavorite       bool        `json:"is_favorite"`
 	Media            []mediaItem `json:"media"`
 }
 
@@ -76,9 +78,9 @@ type mediaItem struct {
 }
 
 type filtersJSON struct {
-	BodyParts []refJSON `json:"body_parts"`
-	Equipment []refJSON `json:"equipment"`
-	Muscles   []refJSON `json:"muscles"`
+	BodyParts     []refJSON `json:"body_parts"`
+	Equipment     []refJSON `json:"equipment"`
+	Muscles       []refJSON `json:"muscles"`
 	TrackingTypes []struct {
 		Value string `json:"value"`
 		Name  string `json:"name"`
@@ -86,10 +88,10 @@ type filtersJSON struct {
 }
 
 type fixture struct {
-	chestID, waistID             uint16
-	barbellID, bodyWeightID      uint16
-	pectoralsID, absID           uint16
-	benchID, pushupID, plankID   uint32
+	chestID, waistID           uint16
+	barbellID, bodyWeightID    uint16
+	pectoralsID, absID         uint16
+	benchID, pushupID, plankID uint32
 }
 
 const testPassword = "test-pass-123"
@@ -117,6 +119,7 @@ func setup(t *testing.T) (*gin.Engine, *app.App, fixture) {
 func cleanCatalog(t *testing.T, a *app.App) {
 	t.Helper()
 	for _, q := range []string{
+		`DELETE FROM exercise_favorites`,
 		`DELETE FROM exercise_media`,
 		`DELETE FROM exercise_translations`,
 		`DELETE FROM exercise_secondary_muscles`,
@@ -250,7 +253,7 @@ func do(t *testing.T, router *gin.Engine, method, path, bearer, acceptLang strin
 	return rec, env
 }
 
-func registerAndLogin(t *testing.T, router *gin.Engine, a *app.App) string {
+func registerAndLogin(t *testing.T, router *gin.Engine, a *app.App) (string, uint32) {
 	t.Helper()
 
 	email := fmt.Sprintf("ex%d@gym.test", time.Now().UnixNano())
@@ -288,7 +291,7 @@ func registerAndLogin(t *testing.T, router *gin.Engine, a *app.App) string {
 	if err := json.Unmarshal(env.Data, &tokens); err != nil {
 		t.Fatalf("unmarshal tokens: %v", err)
 	}
-	return tokens.AccessToken
+	return tokens.AccessToken, userID
 }
 
 func getList(t *testing.T, router *gin.Engine, bearer, query, acceptLang string) listJSON {
@@ -331,7 +334,7 @@ func TestListRequiresAuth(t *testing.T) {
 
 func TestListDefaultsAndPagination(t *testing.T) {
 	router, a, _ := setup(t)
-	bearer := registerAndLogin(t, router, a)
+	bearer, _ := registerAndLogin(t, router, a)
 
 	out := getList(t, router, bearer, "", "")
 	if out.Total != 3 || len(out.Items) != 3 || out.Page != 1 || out.PerPage != 20 || out.Pages != 1 {
@@ -377,7 +380,7 @@ func TestListDefaultsAndPagination(t *testing.T) {
 
 func TestListFilters(t *testing.T) {
 	router, a, fx := setup(t)
-	bearer := registerAndLogin(t, router, a)
+	bearer, _ := registerAndLogin(t, router, a)
 
 	out := getList(t, router, bearer, fmt.Sprintf("?body_part_ids=%d", fx.chestID), "")
 	if out.Total != 2 || !contains(out.Items, "Жим штанги лёжа") || !contains(out.Items, "Отжимания") {
@@ -424,7 +427,7 @@ func TestListFilters(t *testing.T) {
 
 func TestListSearch(t *testing.T) {
 	router, a, _ := setup(t)
-	bearer := registerAndLogin(t, router, a)
+	bearer, _ := registerAndLogin(t, router, a)
 
 	out := getList(t, router, bearer, "?q=%D1%88%D1%82%D0%B0%D0%BD%D0%B3", "")
 	if out.Total != 1 || out.Items[0].Name != "Жим штанги лёжа" {
@@ -449,7 +452,7 @@ func TestListSearch(t *testing.T) {
 
 func TestListMyEquipment(t *testing.T) {
 	router, a, fx := setup(t)
-	bearer := registerAndLogin(t, router, a)
+	bearer, _ := registerAndLogin(t, router, a)
 
 	out := getList(t, router, bearer, "?my_equipment=1", "")
 	if out.Total != 2 || !contains(out.Items, "Отжимания") || !contains(out.Items, "Планка") {
@@ -471,7 +474,7 @@ func TestListMyEquipment(t *testing.T) {
 
 func TestDetail(t *testing.T) {
 	router, a, fx := setup(t)
-	bearer := registerAndLogin(t, router, a)
+	bearer, _ := registerAndLogin(t, router, a)
 
 	rec, env := do(t, router, http.MethodGet, fmt.Sprintf("/api/v1/exercises/%d", fx.benchID), bearer, "", nil)
 	if rec.Code != http.StatusOK {
@@ -519,7 +522,7 @@ func TestDetail(t *testing.T) {
 
 func TestFiltersEndpoint(t *testing.T) {
 	router, a, fx := setup(t)
-	bearer := registerAndLogin(t, router, a)
+	bearer, _ := registerAndLogin(t, router, a)
 
 	rec, env := do(t, router, http.MethodGet, "/api/v1/exercises/filters", bearer, "", nil)
 	if rec.Code != http.StatusOK {
@@ -549,5 +552,126 @@ func TestFiltersEndpoint(t *testing.T) {
 	}
 	if f.BodyParts[0].Name != "Chest" && f.BodyParts[1].Name != "Chest" {
 		t.Fatalf("expected en names, got %+v", f.BodyParts)
+	}
+}
+
+func TestFavorites(t *testing.T) {
+	router, a, fx := setup(t)
+	bearer, userID := registerAndLogin(t, router, a)
+	benchURL := fmt.Sprintf("/api/v1/exercises/%d/favorite", fx.benchID)
+
+	// 401 без токена.
+	rec, _ := do(t, router, http.MethodPost, benchURL, "", "", nil)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("add favorite anon: expected 401, got %d", rec.Code)
+	}
+	rec, _ = do(t, router, http.MethodDelete, benchURL, "", "", nil)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("remove favorite anon: expected 401, got %d", rec.Code)
+	}
+
+	// 404 на несуществующее упражнение.
+	rec, _ = do(t, router, http.MethodPost, "/api/v1/exercises/999999/favorite", bearer, "", nil)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("unknown exercise: expected 404, got %d", rec.Code)
+	}
+
+	// 404 на неактивное упражнение.
+	hiddenID := insertExercise(t, a, "0009", fx.chestID, fx.bodyWeightID, fx.pectoralsID, "reps")
+	if _, err := a.DB.Exec(`UPDATE exercises SET is_active = 0 WHERE id = ?`, hiddenID); err != nil {
+		t.Fatalf("deactivate exercise: %v", err)
+	}
+	rec, _ = do(t, router, http.MethodPost, fmt.Sprintf("/api/v1/exercises/%d/favorite", hiddenID), bearer, "", nil)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("inactive exercise: expected 404, got %d", rec.Code)
+	}
+
+	var fav struct {
+		IsFavorite bool `json:"is_favorite"`
+	}
+
+	// Добавление.
+	rec, env := do(t, router, http.MethodPost, benchURL, bearer, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("add favorite: expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if err := json.Unmarshal(env.Data, &fav); err != nil || !fav.IsFavorite {
+		t.Fatalf("add favorite response: %s %v", env.Data, err)
+	}
+
+	// Повторное добавление идемпотентно (INSERT IGNORE).
+	rec, _ = do(t, router, http.MethodPost, benchURL, bearer, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("re-add favorite: expected 200, got %d", rec.Code)
+	}
+	var count int
+	if err := a.DB.Get(&count, `SELECT COUNT(*) FROM exercise_favorites WHERE user_id = ? AND exercise_id = ?`, userID, fx.benchID); err != nil || count != 1 {
+		t.Fatalf("expected single favorite row, got %d (%v)", count, err)
+	}
+
+	// is_favorite в списке по умолчанию.
+	out := getList(t, router, bearer, "", "")
+	if out.Total != 3 {
+		t.Fatalf("expected 3 items, got %d", out.Total)
+	}
+	for _, it := range out.Items {
+		want := it.ID == uint16(fx.benchID)
+		if it.IsFavorite != want {
+			t.Fatalf("unexpected is_favorite for %s: %v", it.Name, it.IsFavorite)
+		}
+	}
+
+	// Фильтр favorites_only.
+	out = getList(t, router, bearer, "?favorites_only=1", "")
+	if out.Total != 1 || len(out.Items) != 1 || out.Items[0].Name != "Жим штанги лёжа" || !out.Items[0].IsFavorite {
+		t.Fatalf("favorites_only: %+v", out)
+	}
+
+	// is_favorite в детальной карточке.
+	getDetail := func(id uint32) detailJSON {
+		t.Helper()
+		rec, env := do(t, router, http.MethodGet, fmt.Sprintf("/api/v1/exercises/%d", id), bearer, "", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("detail %d: expected 200, got %d", id, rec.Code)
+		}
+		var d detailJSON
+		if err := json.Unmarshal(env.Data, &d); err != nil {
+			t.Fatalf("unmarshal detail: %v", err)
+		}
+		return d
+	}
+	if d := getDetail(fx.benchID); !d.IsFavorite {
+		t.Fatalf("bench detail: expected is_favorite")
+	}
+	if d := getDetail(fx.pushupID); d.IsFavorite {
+		t.Fatalf("pushup detail: expected not favorite")
+	}
+
+	// Изоляция пользователей: у второго юзера избранного нет.
+	other, _ := registerAndLogin(t, router, a)
+	out = getList(t, router, other, "?favorites_only=1", "")
+	if out.Total != 0 {
+		t.Fatalf("favorites must be per-user, got %+v", out)
+	}
+
+	// Удаление и идемпотентность удаления.
+	rec, env = do(t, router, http.MethodDelete, benchURL, bearer, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("remove favorite: expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if err := json.Unmarshal(env.Data, &fav); err != nil || fav.IsFavorite {
+		t.Fatalf("remove favorite response: %s %v", env.Data, err)
+	}
+	rec, _ = do(t, router, http.MethodDelete, benchURL, bearer, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("re-remove favorite: expected 200, got %d", rec.Code)
+	}
+
+	out = getList(t, router, bearer, "?favorites_only=1", "")
+	if out.Total != 0 {
+		t.Fatalf("expected empty favorites after delete: %+v", out)
+	}
+	if d := getDetail(fx.benchID); d.IsFavorite {
+		t.Fatalf("bench detail after delete: expected not favorite")
 	}
 }

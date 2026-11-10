@@ -31,10 +31,11 @@ const maxFilterIDs = 100
 // List handles GET /api/v1/exercises: filtered, sorted, paginated catalog.
 func (h *Exercises) List(c *gin.Context) {
 	f := &exercises.ListFilter{
-		Q:           c.Query("q"),
-		MyEquipment: c.Query("my_equipment") == "1" || c.Query("my_equipment") == "true",
-		UserID:      middleware.UserIDFrom(c),
-		Lang:        exercises.LangFromAcceptLanguage(c.GetHeader("Accept-Language")),
+		Q:             c.Query("q"),
+		MyEquipment:   c.Query("my_equipment") == "1" || c.Query("my_equipment") == "true",
+		FavoritesOnly: c.Query("favorites_only") == "1" || c.Query("favorites_only") == "true",
+		UserID:        middleware.UserIDFrom(c),
+		Lang:          exercises.LangFromAcceptLanguage(c.GetHeader("Accept-Language")),
 	}
 
 	for name, dst := range map[string]*[]uint16{
@@ -91,14 +92,13 @@ func (h *Exercises) List(c *gin.Context) {
 
 // Detail handles GET /api/v1/exercises/:id: the full exercise card.
 func (h *Exercises) Detail(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		response.Error(c, http.StatusBadRequest, "invalid exercise id")
+	id, ok := parseExerciseID(c)
+	if !ok {
 		return
 	}
 
 	lang := exercises.LangFromAcceptLanguage(c.GetHeader("Accept-Language"))
-	d, err := h.svc.Detail(c.Request.Context(), uint32(id), lang)
+	d, err := h.svc.Detail(c.Request.Context(), middleware.UserIDFrom(c), id, lang)
 	switch {
 	case errors.Is(err, exercises.ErrNotFound):
 		response.Error(c, http.StatusNotFound, exercises.ErrNotFound.Error())
@@ -122,6 +122,54 @@ func (h *Exercises) Filters(c *gin.Context) {
 		return
 	}
 	response.Success(c, http.StatusOK, f)
+}
+
+// AddFavorite handles POST /api/v1/exercises/:id/favorite (idempotent).
+func (h *Exercises) AddFavorite(c *gin.Context) {
+	id, ok := parseExerciseID(c)
+	if !ok {
+		return
+	}
+	userID := middleware.UserIDFrom(c)
+	if err := h.svc.AddFavorite(c.Request.Context(), userID, id); err != nil {
+		h.favoriteError(c, err, "failed to add favorite")
+		return
+	}
+	response.Success(c, http.StatusOK, gin.H{"is_favorite": true})
+}
+
+// RemoveFavorite handles DELETE /api/v1/exercises/:id/favorite (idempotent).
+func (h *Exercises) RemoveFavorite(c *gin.Context) {
+	id, ok := parseExerciseID(c)
+	if !ok {
+		return
+	}
+	userID := middleware.UserIDFrom(c)
+	if err := h.svc.RemoveFavorite(c.Request.Context(), userID, id); err != nil {
+		h.favoriteError(c, err, "failed to remove favorite")
+		return
+	}
+	response.Success(c, http.StatusOK, gin.H{"is_favorite": false})
+}
+
+func (h *Exercises) favoriteError(c *gin.Context, err error, fallback string) {
+	if errors.Is(err, exercises.ErrNotFound) {
+		response.Error(c, http.StatusNotFound, exercises.ErrNotFound.Error())
+		return
+	}
+	h.log.ErrorContext(c.Request.Context(), "exercise favorite toggle",
+		"error", err, "request_id", middleware.RequestIDFrom(c))
+	response.Error(c, http.StatusInternalServerError, fallback)
+}
+
+// parseExerciseID extracts and validates the :id route parameter.
+func parseExerciseID(c *gin.Context) (uint32, bool) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid exercise id")
+		return 0, false
+	}
+	return uint32(id), true
 }
 
 // parseIDSlice splits a comma-separated list of unsigned ids.

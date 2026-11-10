@@ -8,4 +8,6 @@ export const exercisesApi = {
   list: (params) => http.get('/exercises', { ...authed, params }).then(data),
   get: (id) => http.get(`/exercises/${id}`, authed).then(data),
   filters: () => http.get('/exercises/filters', authed).then(data),
+  addFavorite: (id) => http.post(`/exercises/${id}/favorite`, null, authed).then(data),
+  removeFavorite: (id) => http.delete(`/exercises/${id}/favorite`, authed).then(data),
 }

@@ -51,6 +51,7 @@ const equipmentIds = ref([])
 const muscleIds = ref([])
 const trackingTypes = ref([])
 const myEquipment = ref(false)
+const favoritesOnly = ref(false)
 
 const dictionaries = ref(null)
 const hasUserEquipment = ref(false)
@@ -72,7 +73,8 @@ const activeFilterCount = computed(
     equipmentIds.value.length +
     muscleIds.value.length +
     trackingTypes.value.length +
-    (myEquipment.value ? 1 : 0),
+    (myEquipment.value ? 1 : 0) +
+    (favoritesOnly.value ? 1 : 0),
 )
 
 const hasActiveFilters = computed(() => activeFilterCount.value > 0 || q.value.trim() !== '')
@@ -96,6 +98,7 @@ function listParams(instant) {
   if (muscleIds.value.length) params.muscle_ids = muscleIds.value.join(',')
   if (trackingTypes.value.length) params.tracking_types = trackingTypes.value.join(',')
   if (myEquipment.value) params.my_equipment = 1
+  if (favoritesOnly.value) params.favorites_only = 1
   return params
 }
 
@@ -134,6 +137,7 @@ function syncUrl() {
   if (muscleIds.value.length) query.mu = muscleIds.value.join(',')
   if (trackingTypes.value.length) query.tt = trackingTypes.value.join(',')
   if (myEquipment.value) query.my = '1'
+  if (favoritesOnly.value) query.fav = '1'
   if (sort.value !== 'name') query.sort = sort.value
   if (page.value !== 1) query.page = String(page.value)
   router.replace({ query })
@@ -146,8 +150,28 @@ function resetFilters() {
   muscleIds.value = []
   trackingTypes.value = []
   myEquipment.value = false
+  favoritesOnly.value = false
   sort.value = 'name'
   page.value = 1
+}
+
+async function toggleFavorite(exercise) {
+  const target = !exercise.is_favorite
+  exercise.is_favorite = target
+  try {
+    if (target) {
+      await exercisesApi.addFavorite(exercise.id)
+    } else {
+      await exercisesApi.removeFavorite(exercise.id)
+      if (favoritesOnly.value) {
+        lastParamsKey = ''
+        await loadList()
+      }
+    }
+  } catch (error) {
+    exercise.is_favorite = !target
+    toast.error(error.message)
+  }
 }
 
 function onFiltersChanged() {
@@ -160,14 +184,17 @@ function onFiltersChanged() {
 
 initFromUrl()
 
-watch([qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, sort], () => {
-  onFiltersChanged()
-})
+watch(
+  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort],
+  () => {
+    onFiltersChanged()
+  },
+)
 
 watch(page, () => loadList())
 
 watch(
-  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, sort, page],
+  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort, page],
   syncUrl,
 )
 
@@ -192,6 +219,7 @@ function initFromUrl() {
     trackingTypes.value = query.tt.split(',').filter((v) => v)
   }
   myEquipment.value = query.my === '1'
+  favoritesOnly.value = query.fav === '1'
 }
 
 async function loadMeta() {
@@ -292,6 +320,7 @@ onMounted(() => {
           v-model:muscle-ids="muscleIds"
           v-model:tracking-types="trackingTypes"
           v-model:my-equipment="myEquipment"
+          v-model:favorites-only="favoritesOnly"
           :dictionaries="dictionaries"
           :show-my-equipment="hasUserEquipment"
         />
@@ -334,6 +363,7 @@ onMounted(() => {
               :key="exercise.id"
               :exercise="exercise"
               @open="openExercise"
+              @toggle-favorite="toggleFavorite"
             />
           </div>
 
@@ -389,6 +419,7 @@ onMounted(() => {
           v-model:muscle-ids="muscleIds"
           v-model:tracking-types="trackingTypes"
           v-model:my-equipment="myEquipment"
+          v-model:favorites-only="favoritesOnly"
           :dictionaries="dictionaries"
           :show-my-equipment="hasUserEquipment"
         />

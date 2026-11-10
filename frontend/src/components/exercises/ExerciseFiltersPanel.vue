@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { Info } from '@lucide/vue'
+import { Heart, Info } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 
 import { Checkbox } from '@/components/ui/checkbox'
@@ -21,6 +21,7 @@ const equipmentIds = defineModel('equipmentIds', { type: Array, required: true }
 const muscleIds = defineModel('muscleIds', { type: Array, required: true })
 const trackingTypes = defineModel('trackingTypes', { type: Array, required: true })
 const myEquipment = defineModel('myEquipment', { type: Boolean, required: true })
+const favoritesOnly = defineModel('favoritesOnly', { type: Boolean, required: true })
 
 const sections = computed(() => [
   {
@@ -65,6 +66,14 @@ function toggle(model, value) {
 
 <template>
   <div class="flex flex-col gap-5">
+    <div class="flex items-center gap-2">
+      <Switch id="favorites-only" v-model="favoritesOnly" />
+      <Label for="favorites-only" class="flex cursor-pointer items-center gap-1.5">
+        <Heart class="size-3.5" aria-hidden="true" />
+        {{ t('exercises.favorites') }}
+      </Label>
+    </div>
+
     <div v-if="showMyEquipment" class="flex items-center gap-2">
       <Switch id="my-equipment" v-model="myEquipment" />
       <Label for="my-equipment" class="cursor-pointer">{{ t('exercises.myEquipment') }}</Label>

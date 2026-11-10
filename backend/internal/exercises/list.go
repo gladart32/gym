@@ -27,6 +27,7 @@ type Item struct {
 	Equipment    Ref    `json:"equipment"`
 	TargetMuscle Ref    `json:"target_muscle"`
 	TrackingType string `json:"tracking_type"`
+	IsFavorite   bool   `json:"is_favorite"`
 	Media        Media  `json:"media"`
 }
 
@@ -47,11 +48,12 @@ type ListFilter struct {
 	MuscleIDs     []uint16
 	TrackingTypes []string
 	MyEquipment   bool
+	FavoritesOnly bool
 	Sort          string // name | newest
 	Order         string // asc | desc
 	Page          int
 	PerPage       int
-	UserID        uint32 // for MyEquipment
+	UserID        uint32 // for MyEquipment / FavoritesOnly / is_favorite
 	Lang          string
 }
 
@@ -75,6 +77,7 @@ const listSelectTmpl = `
 		e.target_muscle_id AS muscle_id,
 		m.%[1]s AS muscle_name,
 		e.tracking_type,
+		fav.user_id IS NOT NULL AS is_favorite,
 		(SELECT g.path FROM exercise_media g
 		 WHERE g.exercise_id = e.id AND g.type = 'gif'
 		 ORDER BY g.sort_order, g.id LIMIT 1) AS gif_path,
@@ -86,6 +89,7 @@ const listSelectTmpl = `
 		 ORDER BY th.sort_order, th.id LIMIT 1) AS thumbnail_path
 	FROM exercises e
 	JOIN exercise_translations t ON t.exercise_id = e.id AND t.lang = ?
+	LEFT JOIN exercise_favorites fav ON fav.exercise_id = e.id AND fav.user_id = ?
 	JOIN body_parts bp ON bp.id = e.body_part_id
 	JOIN equipment eq ON eq.id = e.equipment_id
 	JOIN muscles m ON m.id = e.target_muscle_id
@@ -95,6 +99,7 @@ const listCountQuery = `
 	SELECT COUNT(*)
 	FROM exercises e
 	JOIN exercise_translations t ON t.exercise_id = e.id AND t.lang = ?
+	LEFT JOIN exercise_favorites fav ON fav.exercise_id = e.id AND fav.user_id = ?
 	WHERE e.is_active = 1`
 
 type listItemRow struct {
@@ -107,6 +112,7 @@ type listItemRow struct {
 	MuscleID      uint16  `db:"muscle_id"`
 	MuscleName    string  `db:"muscle_name"`
 	TrackingType  string  `db:"tracking_type"`
+	IsFavorite    bool    `db:"is_favorite"`
 	GifPath       *string `db:"gif_path"`
 	ThumbnailPath *string `db:"thumbnail_path"`
 	Attribution   *string `db:"attribution"`
@@ -119,14 +125,14 @@ func (s *Service) List(ctx context.Context, f *ListFilter) (*ListResult, error) 
 
 	cond, condArgs := f.conditions()
 
-	countArgs := append([]any{f.Lang}, condArgs...)
+	countArgs := append([]any{f.Lang, f.UserID}, condArgs...)
 	var total int64
 	if err := s.db.GetContext(ctx, &total, listCountQuery+cond, countArgs...); err != nil {
 		return nil, err
 	}
 
 	offset := (f.Page - 1) * f.PerPage
-	args := append([]any{f.Lang}, condArgs...)
+	args := append([]any{f.Lang, f.UserID}, condArgs...)
 	args = append(args, f.PerPage, offset)
 
 	col := nameColumn(f.Lang)
@@ -146,6 +152,7 @@ func (s *Service) List(ctx context.Context, f *ListFilter) (*ListResult, error) 
 			Equipment:    Ref{ID: r.EquipmentID, Name: r.EquipmentName},
 			TargetMuscle: Ref{ID: r.MuscleID, Name: r.MuscleName},
 			TrackingType: r.TrackingType,
+			IsFavorite:   r.IsFavorite,
 			Media: Media{
 				GifURL:       mediaURL(r.GifPath),
 				ThumbnailURL: mediaURL(r.ThumbnailPath),
@@ -193,6 +200,10 @@ func (f *ListFilter) conditions() (string, []any) {
 			e.equipment_id IN (SELECT equipment_id FROM user_equipment WHERE user_id = ?)
 			OR e.equipment_id = (SELECT id FROM equipment WHERE code = 'body weight'))`)
 		args = append(args, f.UserID)
+	}
+
+	if f.FavoritesOnly {
+		b.WriteString(" AND fav.user_id IS NOT NULL")
 	}
 
 	if cond, arg, ok := f.searchCondition(); ok {

@@ -8,21 +8,23 @@
 |---|---|
 | 1. Бэкенд каталога | **Реализован** (см. ниже) |
 | 2. Фронтенд | **Реализован** (см. ниже) |
-| 3. Избранное | Не начат — **следующий шаг** |
+| 3. Избранное | **Реализован** (см. ниже) |
 
-### Текущее состояние и следующий шаг (обновлено 10.11.2026, вечер)
+Раздел «Упражнения» реализован полностью. Изменения не закоммичены (git-операции — только по явному разрешению пользователя).
 
-**Сделано:** этап 1 (бэкенд каталога: домен `internal/exercises`, 3 эндпоинта за Auth, 7 интеграционных тестов), этап 2 (фронтенд: ExercisesView с фильтрами/поиском/пагинацией/диалогом, i18n, shadcn-компоненты), фикс dev-медиа (bind mount в `app`). Все проверки зелёные: `go build/vet`, `GYM_ENV=test go test ./...`, `npm run lint/build`. Ручной смоук прошёл на реальном каталоге (1324 упр.) в прод-флоу через nginx и в dev через :5173.
+### Что реализовано в этапе 3 «Избранное» (10.11.2026)
 
-**Изменения не закоммичены** (git-операции — только по явному разрешению пользователя).
+- Миграция `00008_exercise_favorites.sql` (PK `user_id+exercise_id`, FK CASCADE, индекс `(user_id, created_at)`), применена на dev и тест-базы (`make migrate-up`, `testutil` поднимает сам)
+- Бэкенд: `favorites.go` — `AddFavorite` (проверка существования/`is_active` → 404, затем `INSERT IGNORE`) и `RemoveFavorite` (идемпотентный DELETE); `POST`/`DELETE /api/v1/exercises/:id/favorite` отвечают `{is_favorite: bool}`; `is_favorite` через `LEFT JOIN exercise_favorites` в списке и детальной; фильтр `favorites_only=1` в ListFilter (+ LEFT JOIN в count-запросе); в хендлере вынесен `parseExerciseID`
+- `registerAndLogin` в тестах возвращает `(token, userID)` — точная проверка счётчика строк
+- Фронт: сердечко на `ExerciseCard` (absolute над медиа, `@click.stop`, aria-label меняется на «Убрать из избранного», заливка `fill-destructive`), optimistic-toggle в `ExercisesView` с откатом + toast при ошибке; в виде «Избранное» снятие лайка форсирует перезагрузку списка (сброс `lastParamsKey`); переключатель «Избранное» первым блоком в `ExerciseFiltersPanel`; URL-параметр `fav`; i18n-ключи `favorites`/`addToFavorites`/`removeFromFavorites` в ru/en
+- Тесты: `TestFavorites` — 401 без токена, 404 (несуществующее/неактивное), идемпотентность add/remove, `is_favorite` в списке и детальной, `favorites_only`, изоляция пользователей; полный набор `go build/vet`, `GYM_ENV=test go test ./...`, `npm run lint/build` — зелёные
+- Смоук (nginx :80, carol@gym.local): лайк/анлайк с оптимистикой, персистентность после F5, фильтр `?fav=1` (2 карточки), снятие лайка в виде «Избранное» перечитывает список, empty state, restore из URL, консоль без ошибок; тестовые лайки удалены
+- Нюанс деплоя: при пересборке app-контейнера nginx мог закэшировать старый IP апстрима — `docker restart gym-nginx`
 
-**Следующий шаг — этап 3 «Избранное»** (детали ниже в разделе «Этап 3»):
-1. Миграция `make migrate-create name=exercise_favorites` → таблица `exercise_favorites` (PK `user_id+exercise_id`, FK CASCADE, индекс `(user_id, created_at)`) — не забыть прогнать: миграции зашиты в бинарник, нужен ребилд/`make up`
-2. Бэкенд: `favorites.go` в домене (INSERT IGNORE / DELETE), `POST`/`DELETE /api/v1/exercises/:id/favorite`, `is_favorite` (LEFT JOIN) в list и detail, фильтр `favorites_only` в ListFilter + парсинг в хендлере
-3. Фронт: сердечко на `ExerciseCard` (optimistic, откат + toast при ошибке), чип/переключатель «Избранное» в `ExerciseFiltersPanel`, параметр `fav` в URL-sync, i18n-ключи в обоих локалях; после toggle — локальное обновление `is_favorite` (перечитывать страницу не нужно), ключ-guard в `loadList` при необходимости обойти force-параметром
-4. Тесты: toggle on/off, `favorites_only`, `is_favorite` в list/detail; проверка `go build/vet` + `make test` + `npm run lint/build`, смоук в браузере
+### Текущее состояние (обновлено 10.11.2026, вечер)
 
-**Окружение:** тест-инфраструктура поднята (`make test-db-up`, :3307/:6380); app-контейнер пересобран с кодом этапа 1; в `dev` базе есть пользователь `smoke1@gym.test` / `smoke-pass-1` (verified) и `carol@gym.local` (инвентарь: Штанга, Гантели, Гиря); каталог засеян (`make seed-catalog`).
+**Окружение:** тест-инфраструктура поднята (`make test-db-up`, :3307/:6380); app-контейнер пересобран с кодом этапов 1–3; в `dev` базе есть пользователь `smoke1@gym.test` / `smoke-pass-1` (verified) и `carol@gym.local` (инвентарь: Штанга, Гантели, Гиря); каталог засеян (`make seed-catalog`, 1324 упр.).
 
 ### Что реализовано в этапе 1 (10.11.2026)
 
@@ -40,7 +42,7 @@
 
 **Подключение:** `server/router.go` + `server/server.go` (сигнатуры `New`/`NewRouter` расширены), `app.go` (поле `Exercises`, DI), обновлены вызовы в `auth_test.go` и `health_test.go`.
 
-**Тесты** `internal/exercises/exercises_test.go` (7 интеграционных, внеш. пакет, инфраструктура `make test-db-up`): 401 без токена; дефолты/пагинация/сортировки/локализация ru-en; все фильтры + комбинация + 400 на невалидные параметры; поиск FULLTEXT/LIKE/en; `my_equipment` до и после выбора инвентаря через `PUT /profile/equipment`; деталь (steps, медиа-URL, вторичные мышцы) + 404 + скрытие неактивных; справочники ru/en.
+**Тесты** `internal/exercises/exercises_test.go` (8 интеграционных, внеш. пакет, инфраструктура `make test-db-up`): 401 без токена; дефолты/пагинация/сортировки/локализация ru-en; все фильтры + комбинация + 400 на невалидные параметры; поиск FULLTEXT/LIKE/en; `my_equipment` до и после выбора инвентаря через `PUT /profile/equipment`; деталь (steps, медиа-URL, вторичные мышцы) + 404 + скрытие неактивных; справочники ru/en; избранное (toggle, `favorites_only`, `is_favorite`, изоляция юзеров).
 
 **Проверки:** `go build ./...`, `go vet ./...`, `GYM_ENV=test go test ./...` — все зелёные.
 
@@ -119,8 +121,10 @@
 | GET | `/api/v1/exercises` | Список с фильтрами |
 | GET | `/api/v1/exercises/:id` | Детальная карточка |
 | GET | `/api/v1/exercises/filters` | Справочники для панели фильтров |
+| POST | `/api/v1/exercises/:id/favorite` | В избранное (идемпотентно; 404 для несуществующего/неактивного) |
+| DELETE | `/api/v1/exercises/:id/favorite` | Из избранного (идемпотентно) |
 
-Query-параметры списка: `q`, `body_part_ids`, `equipment_ids`, `muscle_ids` (comma-separated id), `tracking_types` (comma-separated enum), `my_equipment=1`, `sort=name|newest`, `order=asc|desc`, `page` (≥1), `per_page` (дефолт 20, макс 50).
+Query-параметры списка: `q`, `body_part_ids`, `equipment_ids`, `muscle_ids` (comma-separated id), `tracking_types` (comma-separated enum), `my_equipment=1`, `favorites_only=1`, `sort=name|newest`, `order=asc|desc`, `page` (≥1), `per_page` (дефолт 20, макс 50).
 
 Контракт ответа списка:
 
@@ -134,6 +138,7 @@ Query-параметры списка: `q`, `body_part_ids`, `equipment_ids`, `m
       "equipment":       { "id": 5, "name": "Штанга" },
       "target_muscle":   { "id": 7, "name": "Грудь" },
       "tracking_type": "weight_reps",
+      "is_favorite": false,
       "media": { "gif_url": "/media/videos/0001-….gif", "thumbnail_url": "/media/images/0001-….jpg", "attribution": "© Gym visual — https://gymvisual.com/" }
     }
   ],
@@ -179,9 +184,9 @@ Query-параметры списка: `q`, `body_part_ids`, `equipment_ids`, `m
 
 ---
 
-## Этап 3 — Избранное (отдельным заходом)
+## Этап 3 — Избранное (реализован, см. «Что реализовано в этапе 3»)
 
-- Миграция `make migrate-create name=exercise_favorites` → `00008_exercise_favorites.sql`:
+Миграция `00008_exercise_favorites.sql`:
 
 ```sql
 CREATE TABLE exercise_favorites (
@@ -195,9 +200,9 @@ CREATE TABLE exercise_favorites (
 );
 ```
 
-- Бэкенд: `POST /api/v1/exercises/:id/favorite` (идемпотентно, `INSERT IGNORE`), `DELETE /api/v1/exercises/:id/favorite`; `is_favorite` (LEFT JOIN) в списке и деталях; фильтр `favorites_only=1`
-- Фронт: сердечко на карточке с optimistic-обновлением (откат + toast при ошибке), чип «Избранное» в панели фильтров
-- Тесты: toggle on/off, `favorites_only`, корректность `is_favorite` в списке и деталях
+- Бэкенд: `POST /api/v1/exercises/:id/favorite` (идемпотентно, `INSERT IGNORE`), `DELETE /api/v1/exercises/:id/favorite`; `is_favorite` (LEFT JOIN) в списке и деталях; фильтр `favorites_only=1` — реализовано
+- Фронт: сердечко на карточке с optimistic-обновлением (откат + toast при ошибке), переключатель «Избранное» в панели фильтров, URL-параметр `fav` — реализовано
+- Тесты: toggle on/off, `favorites_only`, корректность `is_favorite` в списке и деталях — реализовано (`TestFavorites`)
 
 ---
 

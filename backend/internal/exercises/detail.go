@@ -30,6 +30,7 @@ type Detail struct {
 	TargetMuscle     Ref         `json:"target_muscle"`
 	SecondaryMuscles []Ref       `json:"secondary_muscles"`
 	TrackingType     string      `json:"tracking_type"`
+	IsFavorite       bool        `json:"is_favorite"`
 	Media            []MediaItem `json:"media"`
 }
 
@@ -45,9 +46,11 @@ const detailQueryTmpl = `
 		eq.%[1]s AS equipment_name,
 		e.target_muscle_id AS muscle_id,
 		m.%[1]s AS muscle_name,
-		e.tracking_type
+		e.tracking_type,
+		fav.user_id IS NOT NULL AS is_favorite
 	FROM exercises e
 	JOIN exercise_translations t ON t.exercise_id = e.id AND t.lang = ?
+	LEFT JOIN exercise_favorites fav ON fav.exercise_id = e.id AND fav.user_id = ?
 	JOIN body_parts bp ON bp.id = e.body_part_id
 	JOIN equipment eq ON eq.id = e.equipment_id
 	JOIN muscles m ON m.id = e.target_muscle_id
@@ -78,6 +81,7 @@ type detailRow struct {
 	MuscleID      uint16  `db:"muscle_id"`
 	MuscleName    string  `db:"muscle_name"`
 	TrackingType  string  `db:"tracking_type"`
+	IsFavorite    bool    `db:"is_favorite"`
 }
 
 type mediaRow struct {
@@ -88,12 +92,13 @@ type mediaRow struct {
 	Attribution *string `db:"attribution"`
 }
 
-// Detail returns the full card of an active exercise.
-func (s *Service) Detail(ctx context.Context, id uint32, lang string) (*Detail, error) {
+// Detail returns the full card of an active exercise with the favorite
+// mark of the given user.
+func (s *Service) Detail(ctx context.Context, userID, id uint32, lang string) (*Detail, error) {
 	col := nameColumn(lang)
 
 	var row detailRow
-	err := s.db.GetContext(ctx, &row, fmt.Sprintf(detailQueryTmpl, col), lang, id)
+	err := s.db.GetContext(ctx, &row, fmt.Sprintf(detailQueryTmpl, col), lang, userID, id)
 	if isNoRows(err) {
 		return nil, ErrNotFound
 	}
@@ -109,6 +114,7 @@ func (s *Service) Detail(ctx context.Context, id uint32, lang string) (*Detail, 
 		Equipment:    Ref{ID: row.EquipmentID, Name: row.EquipmentName},
 		TargetMuscle: Ref{ID: row.MuscleID, Name: row.MuscleName},
 		TrackingType: row.TrackingType,
+		IsFavorite:   row.IsFavorite,
 	}
 	if row.Steps != nil {
 		var steps []string

@@ -71,6 +71,8 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 			exercisesGroup.GET("", exercisesH.List)
 			exercisesGroup.GET("/filters", exercisesH.Filters)
 			exercisesGroup.GET("/:id", exercisesH.Detail)
+			exercisesGroup.POST("/:id/favorite", exercisesH.AddFavorite)
+			exercisesGroup.DELETE("/:id/favorite", exercisesH.RemoveFavorite)
 		}
 	}
 
