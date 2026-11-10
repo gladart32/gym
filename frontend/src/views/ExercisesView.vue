@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RotateCcw, Search, SlidersHorizontal } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -59,7 +59,8 @@ const {
   loading,
 } = storeToRefs(store)
 
-const { activeFilterCount, hasActiveFilters, rangeFrom, rangeTo, showSkeleton } = storeToRefs(store)
+const { activeFilterCount, hasActiveFilters, appliedRevision, rangeFrom, rangeTo, showSkeleton } =
+  storeToRefs(store)
 
 const mobileFiltersOpen = ref(false)
 const detailOpen = ref(false)
@@ -90,24 +91,36 @@ function openExercise(exercise) {
 }
 
 // Поиск (q/qDebounced) не в watcher: debounce и загрузку запускает store.setQ
+// Сортировка — одиночное осознанное действие, применяется мгновенно
+// (applyFiltersNow также «догоняет» отложенные чекбоксы и гасит пилюлю)
+watch(sort, () => store.applyFiltersNow())
+
 watch(
-  [bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort],
+  [bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly],
   () => {
-    store.onFiltersChanged()
+    store.scheduleFiltersApply()
   },
 )
 
-watch(page, () => store.loadList())
+watch(page, () => {
+  if (store.pendingFilters) {
+    store.applyFiltersNow()
+  } else {
+    store.loadList()
+  }
+})
 
-watch(
-  [qDebounced, bodyPartIds, equipmentIds, muscleIds, trackingTypes, myEquipment, favoritesOnly, sort, page],
-  syncUrl,
-)
+// URL отражает применённые фильтры: onFiltersChanged инкрементит appliedRevision
+watch([page, appliedRevision], syncUrl)
 
 onMounted(() => {
   store.initFromUrl(route.query)
   store.loadMeta()
   store.loadList({ instant: true })
+})
+
+onUnmounted(() => {
+  store.cancelPendingApply()
 })
 </script>
 
@@ -187,6 +200,8 @@ onMounted(() => {
           v-model:favorites-only="favoritesOnly"
           :dictionaries="dictionaries"
           :show-my-equipment="hasUserEquipment"
+          :has-active-filters="hasActiveFilters"
+          @reset="store.resetFilters"
         />
       </aside>
 
@@ -286,17 +301,9 @@ onMounted(() => {
           v-model:favorites-only="favoritesOnly"
           :dictionaries="dictionaries"
           :show-my-equipment="hasUserEquipment"
+          :has-active-filters="hasActiveFilters"
+          @reset="store.resetFilters"
         />
-        <Button
-          v-if="hasActiveFilters"
-          variant="outline"
-          size="sm"
-          class="w-fit"
-          @click="store.resetFilters"
-        >
-          <RotateCcw />
-          {{ $t('exercises.resetFilters') }}
-        </Button>
       </SheetContent>
     </Sheet>
 
@@ -305,5 +312,35 @@ onMounted(() => {
       :exercise-id="detailExerciseId"
       :tracking-type-names="trackingTypeNames"
     />
+
+    <!-- Teleport в body: предки main создают stacking context, из-за которого
+         пилюля пряталась под мобильным Sheet'ом -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="store.pendingFilters"
+          class="bg-background fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2.5 rounded-full border py-1.5 pr-1.5 pl-4 text-sm shadow-md"
+        >
+          <span class="text-muted-foreground whitespace-nowrap">
+            {{ $t('exercises.pendingFilters') }}
+          </span>
+          <span
+            class="bg-muted text-foreground flex size-6 items-center justify-center rounded-full text-xs font-medium tabular-nums"
+          >
+            {{ store.applyCountdown }}
+          </span>
+          <Button size="sm" class="h-7 rounded-full px-3" @click="store.applyFiltersNow">
+            {{ $t('exercises.applyFilters') }}
+          </Button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

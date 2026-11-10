@@ -1,8 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { ChevronDown, Info } from '@lucide/vue'
+import { ChevronDown, Info, RotateCcw } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -14,7 +15,10 @@ const { t } = useI18n()
 const props = defineProps({
   dictionaries: { type: Object, required: true },
   showMyEquipment: { type: Boolean, default: false },
+  hasActiveFilters: { type: Boolean, default: false },
 })
+
+const emit = defineEmits(['reset'])
 
 const bodyPartIds = defineModel('bodyPartIds', { type: Array, required: true })
 const equipmentIds = defineModel('equipmentIds', { type: Array, required: true })
@@ -148,5 +152,16 @@ function toggleSection(key) {
         </div>
       </div>
     </section>
+
+    <Button
+      v-if="hasActiveFilters"
+      variant="outline"
+      size="sm"
+      class="w-full"
+      @click="emit('reset')"
+    >
+      <RotateCcw />
+      {{ t('exercises.resetFilters') }}
+    </Button>
   </div>
 </template>

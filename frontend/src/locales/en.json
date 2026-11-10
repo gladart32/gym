@@ -127,6 +127,8 @@
     "filters": "Filters",
     "filtersCount": "Filters ({count})",
     "resetFilters": "Reset filters",
+    "pendingFilters": "Filters changed",
+    "applyFilters": "Apply",
     "clearAll": "Clear",
     "bodyPart": "Body part",
     "equipment": "Equipment",

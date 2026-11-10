@@ -9,9 +9,14 @@ import { useProfileStore } from '@/stores/profile'
 
 export const PER_PAGE = 20
 
-const SEARCH_DEBOUNCE_MS = 400
+const SEARCH_DEBOUNCE_MS = 600
+const APPLY_COUNTDOWN_S = 3
 
 let qTimer = null
+let countdownTimer = null
+// Подавляет планирование применения в watcher'е ExercisesView, когда
+// фильтры меняются программно (resetFilters) и применяются мгновенно.
+let suppressSchedule = false
 
 function parseIdsParam(value) {
   if (!value) return []
@@ -49,6 +54,12 @@ export const useExercisesStore = defineStore('exercises', {
     initialized: false,
     lastParamsKey: '',
     requestSeq: 0,
+
+    // Отложенное применение фильтров: клики по чекбоксам лишь планируют
+    // применение с отсчётом, запрос уходит один раз (см. scheduleFiltersApply).
+    pendingFilters: false,
+    applyCountdown: 0,
+    appliedRevision: 0,
   }),
 
   getters: {
@@ -74,7 +85,9 @@ export const useExercisesStore = defineStore('exercises', {
       clearTimeout(qTimer)
       qTimer = setTimeout(() => {
         this.qDebounced = this.q
-        this.onFiltersChanged()
+        // applyFiltersNow вместо onFiltersChanged: если к этому моменту есть
+        // отложенные чекбоксы, они применяются вместе с поиском и пилюля гаснет
+        this.applyFiltersNow()
       }, SEARCH_DEBOUNCE_MS)
     },
 
@@ -84,6 +97,10 @@ export const useExercisesStore = defineStore('exercises', {
       if (this.initialized) return
       this.initialized = true
 
+      // Присвоение новых массивов ниже триггерит watcher фильтров в
+      // ExercisesView: подавляем планирование, чтобы при монтировании
+      // не всплывала пилюля «Фильтры изменены».
+      suppressSchedule = true
       if (typeof query.q === 'string') {
         this.q = query.q
         this.qDebounced = query.q
@@ -167,7 +184,39 @@ export const useExercisesStore = defineStore('exercises', {
       }
     },
 
+    // Пользователь изменил чекбоксы/свитчи: не дёргаем бекенд на каждый
+    // клик, а показываем отсчёт; каждый новый клик сбрасывает таймер.
+    scheduleFiltersApply() {
+      if (suppressSchedule) {
+        suppressSchedule = false
+        return
+      }
+      clearInterval(countdownTimer)
+      this.pendingFilters = true
+      this.applyCountdown = APPLY_COUNTDOWN_S
+      countdownTimer = setInterval(() => {
+        this.applyCountdown -= 1
+        if (this.applyCountdown <= 0) this.applyFiltersNow()
+      }, 1000)
+    },
+
+    applyFiltersNow() {
+      clearInterval(countdownTimer)
+      this.pendingFilters = false
+      this.applyCountdown = 0
+      this.onFiltersChanged()
+    },
+
+    cancelPendingApply() {
+      clearInterval(countdownTimer)
+      this.pendingFilters = false
+      this.applyCountdown = 0
+    },
+
+    // Мгновенное применение (поиск, сортировка, reset): инкремент ревизии
+    // синхронизирует URL с фактически применёнными фильтрами.
     onFiltersChanged() {
+      this.appliedRevision += 1
       if (this.page === 1) {
         this.loadList()
       } else {
@@ -176,6 +225,8 @@ export const useExercisesStore = defineStore('exercises', {
     },
 
     resetFilters() {
+      suppressSchedule = true
+      this.cancelPendingApply()
       clearTimeout(qTimer)
       this.q = ''
       this.qDebounced = ''
@@ -187,6 +238,7 @@ export const useExercisesStore = defineStore('exercises', {
       this.favoritesOnly = false
       this.sort = 'name'
       this.page = 1
+      this.onFiltersChanged()
     },
 
     async toggleFavorite(exercise) {
@@ -212,6 +264,8 @@ export const useExercisesStore = defineStore('exercises', {
     // при следующем входе в раздел мета и список загрузятся заново.
     invalidateCache() {
       clearTimeout(qTimer)
+      this.cancelPendingApply()
+      suppressSchedule = false
       this.dictionaries = null
       this.hasUserEquipment = false
       this.trackingTypeNames = {}

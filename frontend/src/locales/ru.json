@@ -127,6 +127,8 @@
     "filters": "Фильтры",
     "filtersCount": "Фильтры ({count})",
     "resetFilters": "Сбросить фильтры",
+    "pendingFilters": "Фильтры изменены",
+    "applyFilters": "Применить",
     "clearAll": "Очистить",
     "bodyPart": "Часть тела",
     "equipment": "Оборудование",
