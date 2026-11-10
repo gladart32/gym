@@ -1,12 +1,12 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { Monitor, Smartphone, Trash2 } from '@lucide/vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { authApi } from '@/api/auth'
-import { profileApi } from '@/api/profile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input, PasswordInput } from '@/components/ui/input'
@@ -14,12 +14,15 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/stores/auth'
-import { useExercisesStore } from '@/stores/exercises'
+import { useProfileStore } from '@/stores/profile'
 
 const { t, te, locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
-const exercisesStore = useExercisesStore()
+const profileStore = useProfileStore()
+// серверные данные — из стора (кэш переживает уход со страницы)
+const { currentMeasurement, measurements, measurementsLoading, equipmentItems, equipmentLoading } =
+  storeToRefs(profileStore)
 
 const sessions = ref([])
 const sessionsLoading = ref(true)
@@ -29,23 +32,22 @@ const newPassword = ref('')
 const confirmPassword = ref('')
 const passwordLoading = ref(false)
 
+// черновик формы профиля
 const gender = ref(null)
 const birthDate = ref('')
 const targetWeight = ref('')
 const fitnessLevel = ref(null)
 const profileSaving = ref(false)
-const currentMeasurement = ref(null)
 
-const measurements = ref([])
-const measurementsLoading = ref(true)
+// черновик формы замера
 const measurementDate = ref(todayString())
 const measurementWeight = ref('')
 const measurementHeight = ref('')
 const measurementSaving = ref(false)
 
-const equipmentItems = ref([])
+// черновой выбор инвентаря: правки живут локально до сохранения
 const selectedEquipment = ref([])
-const equipmentLoading = ref(true)
+const equipmentTouched = ref(false)
 const equipmentSaving = ref(false)
 
 const fitnessLevels = [
@@ -76,12 +78,18 @@ function formatDate(iso) {
 // Форма — редактор выбранной даты: если за дату уже есть замер,
 // поля предзаполняются его значениями (upsert перезаписывает запись целиком).
 function syncMeasurementForm(date) {
-  const existing = measurements.value.find((m) => m.measured_on.slice(0, 10) === date)
+  const existing = measurementsList.value.find((m) => m.measured_on.slice(0, 10) === date)
   measurementWeight.value = existing?.weight_kg != null ? String(existing.weight_kg) : ''
   measurementHeight.value = existing?.height_cm != null ? String(existing.height_cm) : ''
 }
 
 watch(measurementDate, syncMeasurementForm)
+
+// первый приход списка замеров — предзаполнить форму выбранной даты;
+// фоновые обновления стора форму не трогают
+watch(measurements, (m, old) => {
+  if (old === null && m !== null) syncMeasurementForm(measurementDate.value)
+})
 
 const currentBody = computed(() => {
   const m = currentMeasurement.value
@@ -92,8 +100,9 @@ const currentBody = computed(() => {
 
 // В карточке профиля показываем только 3 последних замера,
 // полная история — на отдельной странице.
-const recentMeasurements = computed(() => measurements.value.slice(0, 3))
-const hasMoreMeasurements = computed(() => measurements.value.length > 3)
+const measurementsList = computed(() => measurements.value ?? [])
+const recentMeasurements = computed(() => measurementsList.value.slice(0, 3))
+const hasMoreMeasurements = computed(() => measurementsList.value.length > 3)
 
 function equipmentName(item) {
   return locale.value === 'ru' ? item.name_ru || item.name_en : item.name_en || item.name_ru
@@ -102,10 +111,20 @@ function equipmentName(item) {
 // Подсказка «что это такое» из локалей, по code из каталога;
 // если для кода нет перевода — тултип просто не показываем.
 const equipmentOptions = computed(() =>
-  equipmentItems.value.map((item) => {
+  (equipmentItems.value ?? []).map((item) => {
     const key = `profile.equipmentHints.${item.code}`
     return { ...item, hint: te(key, locale.value) ? t(key) : '' }
   }),
+)
+
+// черновой выбор инвентаря синхронизируется из стора, пока пользователь
+// не начал менять его сам
+watch(
+  () => profileStore.selectedEquipment,
+  (ids) => {
+    if (!equipmentTouched.value) selectedEquipment.value = [...ids]
+  },
+  { immediate: true },
 )
 
 async function loadSessions() {
@@ -119,22 +138,26 @@ async function loadSessions() {
   }
 }
 
-function prefillProfile(data) {
-  const p = data?.profile
+function prefillProfileFields() {
+  const p = profileStore.profile
   gender.value = p?.gender ?? null
   birthDate.value = p?.birth_date ? p.birth_date.slice(0, 10) : ''
   targetWeight.value = p?.target_weight_kg != null ? String(p.target_weight_kg) : ''
   fitnessLevel.value = p?.fitness_level ?? null
-  currentMeasurement.value = data?.current_measurement ?? null
 }
 
-async function loadProfile() {
-  try {
-    prefillProfile(await profileApi.get())
-  } catch (error) {
-    toast.error(error.message)
-  }
-}
+// форма предзаполняется один раз при появлении данных и после сохранения:
+// фоновый refresh стора не затирает недосохранённое редактирование
+const profileFormFilled = ref(false)
+watch(
+  () => profileStore.profile,
+  (p) => {
+    if (!p || profileFormFilled.value) return
+    profileFormFilled.value = true
+    prefillProfileFields()
+  },
+  { immediate: true },
+)
 
 async function saveProfile() {
   profileSaving.value = true
@@ -146,24 +169,13 @@ async function saveProfile() {
       fitness_level: fitnessLevel.value,
       tz_offset: new Date().getTimezoneOffset(),
     }
-    prefillProfile(await profileApi.update(payload))
-    toast.success(t('profile.profileSaved'))
-  } catch (error) {
-    toast.error(error.message)
+    const ok = await profileStore.saveProfile(payload)
+    if (ok) {
+      prefillProfileFields()
+      toast.success(t('profile.profileSaved'))
+    }
   } finally {
     profileSaving.value = false
-  }
-}
-
-async function loadMeasurements() {
-  measurementsLoading.value = true
-  try {
-    measurements.value = (await profileApi.measurements()) ?? []
-    syncMeasurementForm(measurementDate.value)
-  } catch (error) {
-    toast.error(error.message)
-  } finally {
-    measurementsLoading.value = false
   }
 }
 
@@ -174,54 +186,31 @@ async function addMeasurement() {
   }
   measurementSaving.value = true
   try {
-    await profileApi.upsertMeasurement({
+    const ok = await profileStore.addMeasurement({
       measured_on: measurementDate.value,
       weight_kg: measurementWeight.value === '' ? null : Number(measurementWeight.value),
       height_cm: measurementHeight.value === '' ? null : Number(measurementHeight.value),
       tz_offset: new Date().getTimezoneOffset(),
     })
-    toast.success(t('profile.measurementSaved'))
-    await Promise.all([loadMeasurements(), refreshCurrentMeasurement()])
-  } catch (error) {
-    toast.error(error.message)
+    if (ok) {
+      toast.success(t('profile.measurementSaved'))
+      syncMeasurementForm(measurementDate.value)
+    }
   } finally {
     measurementSaving.value = false
   }
 }
 
 async function deleteMeasurement(measurement) {
-  try {
-    await profileApi.deleteMeasurement(measurement.id)
+  const ok = await profileStore.deleteMeasurement(measurement.id)
+  if (ok) {
     toast.success(t('profile.measurementDeleted'))
-    await Promise.all([loadMeasurements(), refreshCurrentMeasurement()])
-  } catch (error) {
-    toast.error(error.message)
-  }
-}
-
-async function refreshCurrentMeasurement() {
-  try {
-    const data = await profileApi.get()
-    currentMeasurement.value = data.current_measurement ?? null
-  } catch {
-    // текущее значение обновится при следующем открытии страницы
-  }
-}
-
-async function loadEquipment() {
-  equipmentLoading.value = true
-  try {
-    const data = await profileApi.equipment()
-    equipmentItems.value = data.items
-    selectedEquipment.value = data.selected_ids
-  } catch (error) {
-    toast.error(error.message)
-  } finally {
-    equipmentLoading.value = false
+    syncMeasurementForm(measurementDate.value)
   }
 }
 
 function toggleEquipment(id) {
+  equipmentTouched.value = true
   selectedEquipment.value = selectedEquipment.value.includes(id)
     ? selectedEquipment.value.filter((x) => x !== id)
     : [...selectedEquipment.value, id]
@@ -230,13 +219,13 @@ function toggleEquipment(id) {
 async function saveEquipment() {
   equipmentSaving.value = true
   try {
-    const data = await profileApi.replaceEquipment(selectedEquipment.value)
-    selectedEquipment.value = data.selected_ids
-    // инвентарь влияет на фильтры и выдачу упражнений — сбрасываем кэш раздела
-    exercisesStore.invalidateCache()
-    toast.success(t('profile.equipmentSaved'))
-  } catch (error) {
-    toast.error(error.message)
+    const ok = await profileStore.saveEquipment(selectedEquipment.value)
+    if (ok) {
+      // после сохранения черновик снова следует за стором
+      equipmentTouched.value = false
+      selectedEquipment.value = [...profileStore.selectedEquipment]
+      toast.success(t('profile.equipmentSaved'))
+    }
   } finally {
     equipmentSaving.value = false
   }
@@ -289,9 +278,9 @@ async function onLogout() {
 
 onMounted(() => {
   loadSessions()
-  loadProfile()
-  loadMeasurements()
-  loadEquipment()
+  profileStore.loadProfile()
+  profileStore.loadMeasurements()
+  profileStore.loadEquipment()
 })
 </script>
 
@@ -409,7 +398,7 @@ onMounted(() => {
         <p v-if="measurementsLoading" class="text-muted-foreground text-sm">
           {{ $t('common.loading') }}
         </p>
-        <p v-else-if="measurements.length === 0" class="text-muted-foreground text-sm">
+        <p v-else-if="measurementsList.length === 0" class="text-muted-foreground text-sm">
           {{ $t('profile.noMeasurements') }}
         </p>
         <table v-else class="w-full max-w-md text-sm">

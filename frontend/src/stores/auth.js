@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 
 import { authApi } from '@/api/auth'
+import { useProfileStore } from '@/stores/profile'
+// Циклический импорт с exercises.js и profile.js безопасен: сторы вызываются
+// только внутри actions в рантайме.
 import { useExercisesStore } from '@/stores/exercises'
 
 const REFRESH_MARGIN_MS = 10_000
@@ -27,6 +30,8 @@ export const useAuthStore = defineStore('auth', {
 
     async login(email, password) {
       this.applyTokenData(await authApi.login(email, password))
+      // данные профиля грузим сразу и ждём: к моменту навигации стор готов
+      await useProfileStore().bootstrap()
     },
 
     // single-flight: параллельные запросы ждут один и тот же refresh
@@ -49,6 +54,9 @@ export const useAuthStore = defineStore('auth', {
 
     async refresh(silent = false) {
       this.applyTokenData(await authApi.refresh(silent))
+      // каждый рефреш токена (F5 через boot и фоновое истечение access)
+      // обновляет данные пользователя в сторе; не ждём — не тормозим запросы
+      useProfileStore().onAuthRefreshed()
       return this.accessToken
     },
 
@@ -62,8 +70,9 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = null
       this.tokenExpiresAt = 0
       this.user = null
-      // кэш упражнений (избранное, мой инвентарь) — пользователь-специфичный
+      // кэши exercises и profile — пользователь-специфичные
       useExercisesStore().$reset()
+      useProfileStore().$reset()
     },
 
     async logout() {

@@ -2,10 +2,10 @@ import { defineStore } from 'pinia'
 import { toast } from 'vue-sonner'
 
 import { exercisesApi } from '@/api/exercises'
-import { profileApi } from '@/api/profile'
-// Циклический импорт с auth.js безопасен: useAuthStore вызывается
+// Циклический импорт с auth.js и profile.js безопасен: сторы вызываются
 // только внутри actions в рантайме.
 import { useAuthStore } from '@/stores/auth'
+import { useProfileStore } from '@/stores/profile'
 
 export const PER_PAGE = 20
 
@@ -150,15 +150,16 @@ export const useExercisesStore = defineStore('exercises', {
       if (this.dictionaries) return
       this.metaLoading = true
       try {
-        const [filtersData, equipmentData] = await Promise.all([
+        // инвентарь берём из кэша profile store (или один запрос с дедупом)
+        const [filtersData, selectedEquipment] = await Promise.all([
           exercisesApi.filters(),
-          profileApi.equipment(),
+          useProfileStore().ensureEquipment(),
         ])
         this.dictionaries = filtersData
         this.trackingTypeNames = Object.fromEntries(
           (filtersData.tracking_types ?? []).map((tt) => [tt.value, tt.name]),
         )
-        this.hasUserEquipment = (equipmentData.selected_ids ?? []).length > 0
+        this.hasUserEquipment = selectedEquipment.length > 0
       } catch (error) {
         toast.error(error.message)
       } finally {

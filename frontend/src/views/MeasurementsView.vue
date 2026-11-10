@@ -1,26 +1,29 @@
 <script setup>
 import { ArrowLeft, Trash2 } from '@lucide/vue'
 import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import { profileApi } from '@/api/profile'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useProfileStore } from '@/stores/profile'
 
 const { t, locale } = useI18n()
+const profileStore = useProfileStore()
+// список замеров живёт в сторе и переживает уход со страницы
+const { measurements, measurementsLoading } = storeToRefs(profileStore)
 
-const measurements = ref([])
-const measurementsLoading = ref(true)
 const measurementDate = ref(todayString())
 const measurementWeight = ref('')
 const measurementHeight = ref('')
 const measurementSaving = ref(false)
 
 const dateFmt = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }))
+const measurementsList = computed(() => measurements.value ?? [])
 
 function todayString() {
   const d = new Date()
@@ -35,24 +38,18 @@ function formatDate(iso) {
 // Форма — редактор выбранной даты: если за дату уже есть замер,
 // поля предзаполняются его значениями (upsert перезаписывает запись целиком).
 function syncMeasurementForm(date) {
-  const existing = measurements.value.find((m) => m.measured_on.slice(0, 10) === date)
+  const existing = measurementsList.value.find((m) => m.measured_on.slice(0, 10) === date)
   measurementWeight.value = existing?.weight_kg != null ? String(existing.weight_kg) : ''
   measurementHeight.value = existing?.height_cm != null ? String(existing.height_cm) : ''
 }
 
 watch(measurementDate, syncMeasurementForm)
 
-async function loadMeasurements() {
-  measurementsLoading.value = true
-  try {
-    measurements.value = (await profileApi.measurements()) ?? []
-    syncMeasurementForm(measurementDate.value)
-  } catch (error) {
-    toast.error(error.message)
-  } finally {
-    measurementsLoading.value = false
-  }
-}
+// первый приход данных — предзаполнить форму выбранной даты;
+// фоновые обновления стора форму не трогают
+watch(measurements, (m, old) => {
+  if (old === null && m !== null) syncMeasurementForm(measurementDate.value)
+})
 
 async function addMeasurement() {
   if (measurementWeight.value === '' && measurementHeight.value === '') {
@@ -61,32 +58,30 @@ async function addMeasurement() {
   }
   measurementSaving.value = true
   try {
-    await profileApi.upsertMeasurement({
+    const ok = await profileStore.addMeasurement({
       measured_on: measurementDate.value,
       weight_kg: measurementWeight.value === '' ? null : Number(measurementWeight.value),
       height_cm: measurementHeight.value === '' ? null : Number(measurementHeight.value),
       tz_offset: new Date().getTimezoneOffset(),
     })
-    toast.success(t('profile.measurementSaved'))
-    await loadMeasurements()
-  } catch (error) {
-    toast.error(error.message)
+    if (ok) {
+      toast.success(t('profile.measurementSaved'))
+      syncMeasurementForm(measurementDate.value)
+    }
   } finally {
     measurementSaving.value = false
   }
 }
 
 async function deleteMeasurement(measurement) {
-  try {
-    await profileApi.deleteMeasurement(measurement.id)
+  const ok = await profileStore.deleteMeasurement(measurement.id)
+  if (ok) {
     toast.success(t('profile.measurementDeleted'))
-    await loadMeasurements()
-  } catch (error) {
-    toast.error(error.message)
+    syncMeasurementForm(measurementDate.value)
   }
 }
 
-onMounted(loadMeasurements)
+onMounted(() => profileStore.loadMeasurements())
 </script>
 
 <template>
@@ -147,7 +142,7 @@ onMounted(loadMeasurements)
         <p v-if="measurementsLoading" class="text-muted-foreground text-sm">
           {{ $t('common.loading') }}
         </p>
-        <p v-else-if="measurements.length === 0" class="text-muted-foreground text-sm">
+        <p v-else-if="measurementsList.length === 0" class="text-muted-foreground text-sm">
           {{ $t('profile.noMeasurements') }}
         </p>
         <table v-else class="w-full max-w-md text-sm">
@@ -160,7 +155,7 @@ onMounted(loadMeasurements)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="m in measurements" :key="m.id" class="border-b">
+            <tr v-for="m in measurementsList" :key="m.id" class="border-b">
               <td class="py-2 pr-4">{{ formatDate(m.measured_on) }}</td>
               <td class="py-2 pr-4">
                 {{ m.weight_kg != null ? `${m.weight_kg} ${$t('profile.kg')}` : '—' }}
