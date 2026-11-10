@@ -18,8 +18,8 @@ type Server struct {
 	log        *slog.Logger
 }
 
-func New(cfg *config.Config, log *slog.Logger, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service) *Server {
-	router := NewRouter(log, cfg, health, tasksH, authH, authService, profileH, profileService)
+func New(cfg *config.Config, log *slog.Logger, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service, exercisesH *handler.Exercises) *Server {
+	router := NewRouter(log, cfg, health, tasksH, authH, authService, profileH, profileService, exercisesH)
 
 	return &Server{
 		httpServer: &http.Server{

@@ -11,5 +11,6 @@ export const profileApi = {
   upsertMeasurement: (payload) => http.post('/profile/measurements', payload, authed).then(data),
   deleteMeasurement: (id) => http.delete(`/profile/measurements/${id}`, authed),
   equipment: () => http.get('/profile/equipment', authed).then(data),
-  replaceEquipment: (ids) => http.put('/profile/equipment', { equipment_ids: ids }, authed).then(data),
+  replaceEquipment: (ids) =>
+    http.put('/profile/equipment', { equipment_ids: ids }, authed).then(data),
 }

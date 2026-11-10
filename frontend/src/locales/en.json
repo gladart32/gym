@@ -119,8 +119,33 @@
     "allSessionsTerminated": "Other sessions terminated"
   },
   "exercises": {
-    "description": "Exercise catalog will be here",
-    "add": "Add exercise"
+    "description": "Exercise catalog",
+    "searchPlaceholder": "Search by name…",
+    "sort": "Sort",
+    "sort_name": "By name",
+    "sort_newest": "Newest first",
+    "filters": "Filters",
+    "filtersCount": "Filters ({count})",
+    "resetFilters": "Reset filters",
+    "clearAll": "Clear",
+    "bodyPart": "Body part",
+    "equipment": "Equipment",
+    "muscle": "Target muscle",
+    "trackingType": "Exercise type",
+    "myEquipment": "My equipment",
+    "myEquipmentHint": "Only exercises with your equipment or none required",
+    "myEquipmentEmpty": "Select equipment in your profile first",
+    "found": "Found: {total}",
+    "showingRange": "{from}–{to} of {total}",
+    "notFoundTitle": "Nothing found",
+    "notFoundHint": "Try changing the query or resetting the filters",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "noMedia": "No visuals",
+    "targetMuscle": "Target muscle",
+    "secondaryMuscles": "Secondary muscles",
+    "instructions": "How to perform",
+    "noInstructions": "No instructions yet"
   },
   "analytics": {
     "description": "Progress charts will be here"

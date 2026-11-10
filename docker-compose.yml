@@ -77,6 +77,7 @@ services:
       - "${HTTP_PORT:-8080}:8080"
     volumes:
       - ${LOGS_DIR:-./var/log/gym}:/var/log/gym
+      - ./backend/media:/media:ro
     depends_on:
       mysql:
         condition: service_healthy

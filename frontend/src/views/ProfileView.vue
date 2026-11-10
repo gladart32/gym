@@ -302,7 +302,7 @@ onMounted(() => {
       </CardHeader>
       <CardContent class="flex flex-col gap-4">
         <div class="grid max-w-md gap-4 sm:grid-cols-2">
-          <div class="grid gap-2 content-start">
+          <div class="grid content-start gap-2">
             <Label>{{ $t('profile.gender') }}</Label>
             <div class="flex gap-2">
               <Button
@@ -336,7 +336,7 @@ onMounted(() => {
               max="500"
             />
           </div>
-          <div class="grid gap-2 content-start">
+          <div class="grid content-start gap-2">
             <Label>{{ $t('profile.fitnessLevel') }}</Label>
             <div class="flex flex-wrap gap-2">
               <Button
@@ -566,12 +566,7 @@ onMounted(() => {
                 </p>
               </div>
             </div>
-            <Button
-              v-if="session.is_current"
-              variant="outline"
-              size="sm"
-              @click="onLogout"
-            >
+            <Button v-if="session.is_current" variant="outline" size="sm" @click="onLogout">
               {{ $t('auth.logout') }}
             </Button>
             <Button v-else variant="outline" size="sm" @click="onRevoke(session)">

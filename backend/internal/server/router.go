@@ -12,7 +12,7 @@ import (
 	"github.com/gladart32/gym/internal/transport/http/middleware"
 )
 
-func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service) *gin.Engine {
+func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service, exercisesH *handler.Exercises) *gin.Engine {
 	if cfg.Env == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -64,6 +64,13 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 			profileGroup.DELETE("/measurements/:id", profileH.DeleteMeasurement)
 			profileGroup.GET("/equipment", profileH.Equipment)
 			profileGroup.PUT("/equipment", profileH.ReplaceEquipment)
+		}
+
+		exercisesGroup := api.Group("/exercises", middleware.Auth(authService))
+		{
+			exercisesGroup.GET("", exercisesH.List)
+			exercisesGroup.GET("/filters", exercisesH.Filters)
+			exercisesGroup.GET("/:id", exercisesH.Detail)
 		}
 	}
 

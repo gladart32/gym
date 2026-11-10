@@ -13,7 +13,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
-    "@lucide/vue": "^1.66.0",
+    "@lucide/vue": "^1.70.0",
     "@vueuse/core": "^15.0.0",
     "axios": "^1.21.0",
     "class-variance-authority": "^0.7.1",

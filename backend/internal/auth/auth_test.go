@@ -51,6 +51,7 @@ func setup(t *testing.T) (*gin.Engine, *app.App) {
 		a.Auth,
 		handler.NewProfile(a.Log, a.Profile),
 		a.Profile,
+		handler.NewExercises(a.Log, a.Exercises),
 	)
 	return router, a
 }

@@ -2,6 +2,71 @@
 
 План реализации раздела «Упражнения» (каталог с фильтрами, поиском, пагинацией и визуализацией). Составлен по итогам исследования бэкенда/фронтенда и схемы БД (`docs/DB.md`).
 
+## Статус реализации
+
+| Этап | Статус |
+|---|---|
+| 1. Бэкенд каталога | **Реализован** (см. ниже) |
+| 2. Фронтенд | **Реализован** (см. ниже) |
+| 3. Избранное | Не начат — **следующий шаг** |
+
+### Текущее состояние и следующий шаг (обновлено 10.11.2026, вечер)
+
+**Сделано:** этап 1 (бэкенд каталога: домен `internal/exercises`, 3 эндпоинта за Auth, 7 интеграционных тестов), этап 2 (фронтенд: ExercisesView с фильтрами/поиском/пагинацией/диалогом, i18n, shadcn-компоненты), фикс dev-медиа (bind mount в `app`). Все проверки зелёные: `go build/vet`, `GYM_ENV=test go test ./...`, `npm run lint/build`. Ручной смоук прошёл на реальном каталоге (1324 упр.) в прод-флоу через nginx и в dev через :5173.
+
+**Изменения не закоммичены** (git-операции — только по явному разрешению пользователя).
+
+**Следующий шаг — этап 3 «Избранное»** (детали ниже в разделе «Этап 3»):
+1. Миграция `make migrate-create name=exercise_favorites` → таблица `exercise_favorites` (PK `user_id+exercise_id`, FK CASCADE, индекс `(user_id, created_at)`) — не забыть прогнать: миграции зашиты в бинарник, нужен ребилд/`make up`
+2. Бэкенд: `favorites.go` в домене (INSERT IGNORE / DELETE), `POST`/`DELETE /api/v1/exercises/:id/favorite`, `is_favorite` (LEFT JOIN) в list и detail, фильтр `favorites_only` в ListFilter + парсинг в хендлере
+3. Фронт: сердечко на `ExerciseCard` (optimistic, откат + toast при ошибке), чип/переключатель «Избранное» в `ExerciseFiltersPanel`, параметр `fav` в URL-sync, i18n-ключи в обоих локалях; после toggle — локальное обновление `is_favorite` (перечитывать страницу не нужно), ключ-guard в `loadList` при необходимости обойти force-параметром
+4. Тесты: toggle on/off, `favorites_only`, `is_favorite` в list/detail; проверка `go build/vet` + `make test` + `npm run lint/build`, смоук в браузере
+
+**Окружение:** тест-инфраструктура поднята (`make test-db-up`, :3307/:6380); app-контейнер пересобран с кодом этапа 1; в `dev` базе есть пользователь `smoke1@gym.test` / `smoke-pass-1` (verified) и `carol@gym.local` (инвентарь: Штанга, Гантели, Гиря); каталог засеян (`make seed-catalog`).
+
+### Что реализовано в этапе 1 (10.11.2026)
+
+**Домен `backend/internal/exercises/`:**
+- `service.go` — `Service{db, log}` по образцу `internal/profile`
+- `lang.go` — `LangFromAcceptLanguage` (ru/en, фолбэк ru) + выбор колонки `name_ru`/`name_en`
+- `list.go` — список: динамический WHERE (поиск FULLTEXT ngram `MATCH … AGAINST(BOOLEAN MODE)` с экранированием операторов, фолбэк `LIKE` для запросов короче 2 рун или состоящих только из операторов; `IN(…)` для body_part_ids / equipment_ids / muscle_ids / tracking_types; `my_equipment` через `user_equipment` + всегда `equipment.code='body weight'`), сортировка `name`/`newest` × `asc`/`desc`, LIMIT/OFFSET + отдельный COUNT, нормализация путей медиа (`/media/` + path). Нюанс: `sort=newest` без явного `order` отдаёт новые сверху (DESC)
+- `detail.go` — детальная карточка (перевод, steps JSON, instructions, вторичные мышцы, медиа с attribution), доменная ошибка `ErrNotFound` → 404
+- `filters.go` — локализованные справочники + `IsTrackingType` (whitelist), метки tracking_type ru/en
+
+**Эндпоинты** (группа за `middleware.Auth`, `internal/transport/http/handler/exercises.go`):
+- `GET /api/v1/exercises` — query: `q, body_part_ids, equipment_ids, muscle_ids, tracking_types, my_equipment, sort, order, page, per_page` (дефолт 20, макс 50, лимит 100 id на список; невалидные значения → 400)
+- `GET /api/v1/exercises/filters` — справочники по `Accept-Language`
+- `GET /api/v1/exercises/:id` — детальная, 404 для неизвестных и `is_active=0`
+
+**Подключение:** `server/router.go` + `server/server.go` (сигнатуры `New`/`NewRouter` расширены), `app.go` (поле `Exercises`, DI), обновлены вызовы в `auth_test.go` и `health_test.go`.
+
+**Тесты** `internal/exercises/exercises_test.go` (7 интеграционных, внеш. пакет, инфраструктура `make test-db-up`): 401 без токена; дефолты/пагинация/сортировки/локализация ru-en; все фильтры + комбинация + 400 на невалидные параметры; поиск FULLTEXT/LIKE/en; `my_equipment` до и после выбора инвентаря через `PUT /profile/equipment`; деталь (steps, медиа-URL, вторичные мышцы) + 404 + скрытие неактивных; справочники ru/en.
+
+**Проверки:** `go build ./...`, `go vet ./...`, `GYM_ENV=test go test ./...` — все зелёные.
+
+### Что реализовано в этапе 2 (10.11.2026)
+
+**Компоненты shadcn-vue доустановлены:** `checkbox, badge, pagination, dialog, select, scroll-area, switch` (кнопка не перезаписана; `@lucide/vue` обновлён 1.66 → 1.70).
+
+**Код:**
+- `src/api/exercises.js` — `list(params)`, `get(id)`, `filters()` по образцу `profile.js`
+- `src/views/ExercisesView.vue` — полная замена заглушки: тулбар (поиск с debounce 400 мс через `refDebounced`, select сортировки), панель фильтров (десктоп — sticky-колонка `lg:`; мобилка — Sheet слева), сетка карточек `2/3/4` колонки, нумерованная пагинация (reka-ui Pagination с ellipsis), Skeleton-загрузка, empty state с кнопкой сброса, тосты об ошибках
+- `src/components/exercises/ExerciseFiltersPanel.vue` — чекбокс-секции: часть тела, оборудование (ScrollArea), мышцы (ScrollArea), тип упражнения, Switch «Мой инвентарь» (показывается только если в профиле выбран инвентарь) + tooltip-подсказка; двусторонняя связь через `defineModel`
+- `src/components/exercises/ExerciseCard.vue` — GIF (`loading="lazy"`, 180×180, фолбэк «Нет визуализации» при ошибке), компактная подпись © Gym visual (из `attribution`), бейджи части тела и оборудования
+- `src/components/exercises/ExerciseDetailDialog.vue` — DialogScrollContent: GIF + полная attribution, бейджи (включая локализованный тип записи), целевая/вспомогательные мышцы, шаги из `steps` (фолбэк `instructions`), Skeleton при загрузке
+- i18n: неймспейс `exercises` переписан в `ru.json`/`en.json` (~25 ключей)
+
+**Поведение:**
+- Состояние (поиск, фильтры, сортировка, страница) синхронизировано с URL (`router.replace`, короткие ключи `q/bp/eq/mu/tt/my/sort/page`), восстановление при заходе по ссылке
+- Смена фильтров сбрасывает страницу в 1; защита от гонок (seq-guard) и от дублей запросов (params-key guard); при сетевой ошибке кэш ключа сбрасывается — повтор возможен
+- «Мой инвентарь» отправляет `my_equipment=1`; `initFromUrl` выполняется в setup до регистрации вотчеров (без лишних запросов при restore из URL)
+
+**Найдено и исправлено при смоук-тесте:** отсутствие вотчера `page → loadList` (пагинация меняла только счётчик) — исправлено; дубли начальных запросов — исправлено key-guard'ом.
+
+**Проверки:** `npm run lint`, `npm run build` — зелёные. Ручной смоук по прод-флоу (nginx :80, свежий dist, каталог 1324 шт.): список/пагинация 67 стр., поиск «жим штанги» (debounce), фильтр «Грудь» (163), комбинация фильтр+поиск (104), «Мой инвентарь» (104 → 65 при инвентаре Штанга/Гантели/Гиря), диалог деталей (шаги, мышцы, attribution), мобильный Sheet с фильтрами, восстановление состояния из URL, GIF отдаются nginx'ом (200).
+
+**Известная особенность dev-режима — исправлена:** Vite-прокси `/media` → app-контейнер отдавал 404 (в образе нет медиа). Добавлен bind mount `./backend/media:/media:ro` в сервис `app` (docker-compose.yml) — теперь Gin раздаёт медиа и из контейнера (:8080), дев-прокси (:5173) и nginx (:80) работают одинаково.
+
 ## Принятые решения
 
 - Список — **нумерованная пагинация** (кнопки страниц, shadcn Pagination)

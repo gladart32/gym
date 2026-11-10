@@ -119,8 +119,33 @@
     "allSessionsTerminated": "Другие сессии завершены"
   },
   "exercises": {
-    "description": "Здесь будет справочник упражнений",
-    "add": "Добавить упражнение"
+    "description": "Справочник упражнений",
+    "searchPlaceholder": "Поиск по названию…",
+    "sort": "Сортировка",
+    "sort_name": "По названию",
+    "sort_newest": "Сначала новые",
+    "filters": "Фильтры",
+    "filtersCount": "Фильтры ({count})",
+    "resetFilters": "Сбросить фильтры",
+    "clearAll": "Очистить",
+    "bodyPart": "Часть тела",
+    "equipment": "Оборудование",
+    "muscle": "Целевая мышца",
+    "trackingType": "Тип упражнения",
+    "myEquipment": "Мой инвентарь",
+    "myEquipmentHint": "Только упражнения с вашим инвентарём или без оборудования",
+    "myEquipmentEmpty": "Сначала выберите инвентарь в профиле",
+    "found": "Найдено: {total}",
+    "showingRange": "{from}–{to} из {total}",
+    "notFoundTitle": "Ничего не найдено",
+    "notFoundHint": "Попробуйте изменить запрос или сбросить фильтры",
+    "prevPage": "Назад",
+    "nextPage": "Вперёд",
+    "noMedia": "Нет визуализации",
+    "targetMuscle": "Целевая мышца",
+    "secondaryMuscles": "Вспомогательные мышцы",
+    "instructions": "Как выполнять",
+    "noInstructions": "Инструкции пока нет"
   },
   "analytics": {
     "description": "Здесь будут графики прогресса"
