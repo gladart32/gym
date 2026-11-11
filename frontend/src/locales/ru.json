@@ -84,6 +84,8 @@
     "pickerHint": "Найдите упражнение в каталоге и нажмите, чтобы добавить его в день",
     "pickerEmpty": "Ничего не найдено",
     "pickerAdd": "Добавить",
+    "pickerClearFilter": "Очистить",
+    "pickerNoOptions": "Нет значений",
     "name": "Название",
     "descriptionLabel": "Описание",
     "descriptionPlaceholder": "Цель, расписание, заметки…",

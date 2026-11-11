@@ -11,7 +11,7 @@ defineEmits(['open'])
 
 <template>
   <Card
-    class="group hover:border-ring cursor-pointer py-0 transition-colors"
+    class="group hover:bg-muted/40 hover:border-ring hover:shadow-xs cursor-pointer py-0 transition-[background-color,border-color,box-shadow]"
     @click="$emit('open', program)"
   >
     <CardContent class="flex flex-col gap-2 p-4">

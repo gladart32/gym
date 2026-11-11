@@ -84,6 +84,8 @@
     "pickerHint": "Find an exercise in the catalog and click to add it to the day",
     "pickerEmpty": "Nothing found",
     "pickerAdd": "Add",
+    "pickerClearFilter": "Clear",
+    "pickerNoOptions": "No options",
     "name": "Name",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Goal, schedule, notes…",

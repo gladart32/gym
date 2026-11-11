@@ -200,11 +200,11 @@ watch(programId, async (id, prev) => {
             class="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-start"
           >
             <div
-              class="bg-muted flex aspect-square size-24 shrink-0 items-center justify-center overflow-hidden rounded-md"
+              class="bg-muted flex aspect-square size-24 shrink-0 items-center justify-center overflow-hidden rounded-md sm:size-40"
             >
               <img
-                v-if="exercise.thumbnail_url || exercise.gif_url"
-                :src="exercise.thumbnail_url || exercise.gif_url"
+                v-if="exercise.gif_url || exercise.thumbnail_url"
+                :src="exercise.gif_url || exercise.thumbnail_url"
                 :alt="exercise.name"
                 loading="lazy"
                 decoding="async"
