@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ArrowLeft, Copy, Pencil, Trash2 } from '@lucide/vue'
+import { ArrowLeft, Copy, Download, Pencil, Trash2 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -27,7 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useExercisesStore } from '@/stores/exercises'
 import useProgramsStore from '@/stores/programs'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const store = useProgramsStore()
@@ -39,6 +39,7 @@ const detail = ref(null)
 const loading = ref(true)
 const deleteOpen = ref(false)
 const deleting = ref(false)
+const exporting = ref(false)
 
 const programId = computed(() => Number(route.params.id))
 
@@ -85,6 +86,24 @@ async function copyProgram() {
   }
 }
 
+async function exportPdf() {
+  if (!detail.value || exporting.value) return
+  exporting.value = true
+  try {
+    const { exportProgramPdf } = await import('@/utils/programPdf')
+    await exportProgramPdf(detail.value, {
+      t,
+      locale: locale.value,
+      trackingTypeNames: trackingTypeNames.value,
+    })
+  } catch (error) {
+    console.error(error)
+    toast.error(t('programs.pdfExportError'))
+  } finally {
+    exporting.value = false
+  }
+}
+
 async function removeProgram() {
   deleting.value = true
   const ok = await store.removeProgram(programId.value)
@@ -122,6 +141,10 @@ watch(programId, async (id, prev) => {
         {{ $t('programs.backToList') }}
       </Button>
       <div v-if="detail" class="flex flex-wrap items-center gap-2">
+        <Button variant="outline" :disabled="exporting" @click="exportPdf">
+          <Download />
+          {{ $t('programs.downloadPdf') }}
+        </Button>
         <Button v-if="canEdit" variant="outline" @click="router.push({ name: 'program-edit', params: { id: detail.id } })">
           <Pencil />
           {{ $t('programs.edit') }}
