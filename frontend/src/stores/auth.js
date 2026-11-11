@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 
 import { authApi } from '@/api/auth'
 import { useProfileStore } from '@/stores/profile'
-// Циклический импорт с exercises.js и profile.js безопасен: сторы вызываются
-// только внутри actions в рантайме.
+// Циклический импорт с exercises.js, programs.js и profile.js безопасен:
+// сторы вызываются только внутри actions в рантайме.
 import { useExercisesStore } from '@/stores/exercises'
+import useProgramsStore from '@/stores/programs'
 
 const REFRESH_MARGIN_MS = 10_000
 
@@ -70,8 +71,9 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = null
       this.tokenExpiresAt = 0
       this.user = null
-      // кэши exercises и profile — пользователь-специфичные
+      // кэши exercises, programs и profile — пользователь-специфичные
       useExercisesStore().$reset()
+      useProgramsStore().$reset()
       useProfileStore().$reset()
     },
 

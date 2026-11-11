@@ -109,6 +109,8 @@ func setup(t *testing.T) (*gin.Engine, *app.App, fixture) {
 		handler.NewProfile(a.Log, a.Profile),
 		a.Profile,
 		handler.NewExercises(a.Log, a.Exercises),
+		handler.NewPrograms(a.Log, a.Programs),
+		a.Programs,
 	)
 
 	cleanCatalog(t, a)
@@ -119,6 +121,17 @@ func setup(t *testing.T) (*gin.Engine, *app.App, fixture) {
 func cleanCatalog(t *testing.T, a *app.App) {
 	t.Helper()
 	for _, q := range []string{
+		// program/workout tables reference exercises — cleared first.
+		`DELETE FROM workout_sets`,
+		`DELETE FROM workout_exercises`,
+		`DELETE FROM workouts`,
+		`DELETE FROM user_schedule_rules`,
+		`DELETE FROM user_programs`,
+		`DELETE FROM program_schedule_rules`,
+		`DELETE FROM program_sets`,
+		`DELETE FROM program_exercises`,
+		`DELETE FROM program_days`,
+		`DELETE FROM programs`,
 		`DELETE FROM exercise_favorites`,
 		`DELETE FROM exercise_media`,
 		`DELETE FROM exercise_translations`,

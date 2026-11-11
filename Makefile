@@ -65,8 +65,10 @@ run:
 worker:
 	cd $(BACKEND) && GYM_LOGGER_FILE_PATH=logs/worker.log go run ./cmd/gym worker
 
+# -p 1: интеграционные тесты (auth/exercises/programs) сеют одну тестовую БД —
+# пакеты должны выполняться последовательно.
 test:
-	cd $(BACKEND) && GYM_ENV=test go test ./...
+	cd $(BACKEND) && GYM_ENV=test go test -p 1 ./...
 
 vet:
 	cd $(BACKEND) && go vet ./...

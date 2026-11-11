@@ -30,6 +30,24 @@ const router = createRouter({
           meta: { title: 'nav.workouts' },
         },
         {
+          path: 'workouts/new',
+          name: 'program-create',
+          component: () => import('@/views/ProgramEditorView.vue'),
+          meta: { title: 'programs.createTitle' },
+        },
+        {
+          path: 'workouts/:id/edit',
+          name: 'program-edit',
+          component: () => import('@/views/ProgramEditorView.vue'),
+          meta: { title: 'programs.editTitle' },
+        },
+        {
+          path: 'workouts/:id',
+          name: 'program-detail',
+          component: () => import('@/views/ProgramDetailView.vue'),
+          meta: { title: 'programs.detailTitle' },
+        },
+        {
           path: 'exercises',
           name: 'exercises',
           component: () => import('@/views/ExercisesView.vue'),
