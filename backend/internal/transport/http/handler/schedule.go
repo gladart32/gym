@@ -85,6 +85,21 @@ func (h *Schedule) UpdateRule(c *gin.Context) {
 	response.Success(c, http.StatusOK, rule)
 }
 
+// DeleteRule handles DELETE /api/v1/schedule/rules/:id.
+func (h *Schedule) DeleteRule(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		response.Error(c, http.StatusBadRequest, "invalid rule id")
+		return
+	}
+
+	if err := h.svc.DeleteRule(c.Request.Context(), middleware.UserIDFrom(c), uint32(id)); err != nil {
+		h.domainError(c, err, "failed to delete schedule rule")
+		return
+	}
+	response.Success(c, http.StatusOK, nil)
+}
+
 // Deactivate handles DELETE /api/v1/schedule/programs/:id.
 func (h *Schedule) Deactivate(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)

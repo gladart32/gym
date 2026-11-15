@@ -84,12 +84,10 @@ const selectUserProgramsQuery = `
 
 const selectRulesQuery = `
 	SELECT r.id, r.user_program_id, r.program_day_id, r.frequency, r.interval_n,
-	       r.weekdays, r.once_date, r.is_enabled,
-	       d.name AS day_name, d.position AS day_position
+	       r.weekdays, r.once_date, r.is_enabled, r.day_name, r.day_position
 	FROM user_schedule_rules r
-	JOIN program_days d ON d.id = r.program_day_id
 	WHERE r.user_program_id IN (?)
-	ORDER BY r.user_program_id, d.position, r.id`
+	ORDER BY r.user_program_id, r.day_position, r.id`
 
 const selectRuleOwnerQuery = `
 	SELECT up.user_id
@@ -111,13 +109,13 @@ type ruleRow struct {
 	ID            uint32         `db:"id"`
 	UserProgramID uint32         `db:"user_program_id"`
 	ProgramDayID  uint32         `db:"program_day_id"`
+	DayName       string         `db:"day_name"` // snapshot of program_days.name at rule creation
+	DayPosition   uint8          `db:"day_position"`
 	Frequency     string         `db:"frequency"`
 	IntervalN     uint8          `db:"interval_n"`
 	Weekdays      sql.NullString `db:"weekdays"` // MySQL SET: "mon,wed,fri", NULL for daily/once
 	OnceDate      sql.NullTime   `db:"once_date"`
 	IsEnabled     bool           `db:"is_enabled"`
-	DayName       string         `db:"day_name"`
-	DayPosition   uint8          `db:"day_position"`
 }
 
 func (r ruleRow) toRule() Rule {

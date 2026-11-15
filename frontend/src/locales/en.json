@@ -154,6 +154,10 @@
     "deactivated": "Program removed from the schedule",
     "selected": "In schedule",
     "startProgram": "Start program",
+    "stopProgram": "Stop program",
+    "stopConfirmTitle": "Stop the program?",
+    "stopConfirmHint": "This program's workouts will disappear from the calendar. The program stays in “Workouts” — you can start it again.",
+    "programStopped": "Program stopped",
     "startDate": "Start date",
     "programStarted": "Program added to your schedule",
     "scheduleLabel": "Schedule",
@@ -169,7 +173,9 @@
     "onceDate": "Workout date",
     "selectDayHint": "Pick the weekdays when this workout takes place",
     "ruleUpdated": "Schedule updated",
-    "ruleUpdateFailed": "Failed to update the schedule"
+    "ruleUpdateFailed": "Failed to update the schedule",
+    "deleteRule": "Delete rule",
+    "ruleDeleted": "Rule removed from the schedule"
   },
   "profile": {
     "account": "Account",

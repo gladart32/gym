@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ArrowLeft, CalendarPlus, Copy, Download, Pencil, Trash2 } from '@lucide/vue'
+import { ArrowLeft, CalendarPlus, CalendarX, Copy, Download, Pencil, Trash2 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -71,6 +71,20 @@ async function startProgram() {
   startOpen.value = false
   if (ok) {
     toast.success(t('schedule.programStarted'))
+  }
+}
+
+// Остановка активной программы: тренировки исчезают из календаря
+const stopOpen = ref(false)
+const stopping = ref(false)
+
+async function stopProgram() {
+  stopping.value = true
+  const ok = await scheduleStore.stopProgram(detail.value.id)
+  stopping.value = false
+  stopOpen.value = false
+  if (ok) {
+    toast.success(t('schedule.programStopped'))
   }
 }
 
@@ -191,6 +205,10 @@ watch(programId, async (id, prev) => {
         <Button v-else variant="outline" @click="startOpen = true">
           <CalendarPlus />
           {{ $t('schedule.startProgram') }}
+        </Button>
+        <Button v-if="isInSchedule" variant="outline" class="text-destructive" @click="stopOpen = true">
+          <CalendarX />
+          {{ $t('schedule.stopProgram') }}
         </Button>
         <Button variant="outline" :disabled="exporting" @click="exportPdf">
           <Download />
@@ -370,6 +388,23 @@ watch(programId, async (id, prev) => {
             </Button>
             <Button :disabled="starting" @click="startProgram">
               {{ $t('schedule.startProgram') }}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog v-model:open="stopOpen">
+        <DialogContent class="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{{ $t('schedule.stopConfirmTitle') }}</DialogTitle>
+            <DialogDescription>{{ $t('schedule.stopConfirmHint') }}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" @click="stopOpen = false">
+              {{ $t('programs.cancel') }}
+            </Button>
+            <Button variant="destructive" :disabled="stopping" @click="stopProgram">
+              {{ $t('schedule.stopProgram') }}
             </Button>
           </DialogFooter>
         </DialogContent>

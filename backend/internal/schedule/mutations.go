@@ -22,17 +22,23 @@ const insertUserProgramQuery = `
 	INSERT INTO user_programs (user_id, program_id, start_date, is_active)
 	VALUES (?, ?, ?, TRUE)`
 
+// copyScheduleRulesQuery copies the program's default rules into personal
+// ones, snapshotting the day name/position: later program edits must not
+// affect started programs (no FK to program_days).
 const copyScheduleRulesQuery = `
 	INSERT INTO user_schedule_rules
-	    (user_program_id, program_day_id, frequency, interval_n, weekdays, once_date, is_enabled)
-	SELECT ?, program_day_id, frequency, interval_n, weekdays, once_date, TRUE
-	FROM program_schedule_rules
-	WHERE program_day_id IN (SELECT id FROM program_days WHERE program_id = ?)`
+	    (user_program_id, program_day_id, day_name, day_position, frequency, interval_n, weekdays, once_date, is_enabled)
+	SELECT ?, psr.program_day_id, d.name, d.position, psr.frequency, psr.interval_n, psr.weekdays, psr.once_date, TRUE
+	FROM program_schedule_rules psr
+	JOIN program_days d ON d.id = psr.program_day_id
+	WHERE d.program_id = ?`
 
 const updateRuleQuery = `
 	UPDATE user_schedule_rules
 	SET frequency = ?, interval_n = ?, weekdays = ?, once_date = ?, is_enabled = ?
 	WHERE id = ?`
+
+const deleteRuleQuery = `DELETE FROM user_schedule_rules WHERE id = ?`
 
 const deactivateUserProgramQuery = `
 	UPDATE user_programs SET is_active = FALSE WHERE id = ?`
@@ -154,11 +160,28 @@ func (s *Service) UpdateRule(ctx context.Context, userID, ruleID uint32, in *Rul
 
 const selectRuleByIDQuery = `
 	SELECT r.id, r.user_program_id, r.program_day_id, r.frequency, r.interval_n,
-	       r.weekdays, r.once_date, r.is_enabled,
-	       d.name AS day_name, d.position AS day_position
+	       r.weekdays, r.once_date, r.is_enabled, r.day_name, r.day_position
 	FROM user_schedule_rules r
-	JOIN program_days d ON d.id = r.program_day_id
 	WHERE r.id = ?`
+
+// DeleteRule removes one personal rule; access is limited to the owner
+// of the user program. The rule disappears from the schedule and the
+// week plan.
+func (s *Service) DeleteRule(ctx context.Context, userID, ruleID uint32) error {
+	var owner uint32
+	err := s.db.GetContext(ctx, &owner, selectRuleOwnerQuery, ruleID)
+	if isNoRows(err) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if owner != userID {
+		return ErrForbidden
+	}
+	_, err = s.db.ExecContext(ctx, deleteRuleQuery, ruleID)
+	return err
+}
 
 // Deactivate disables a user program: it disappears from the schedule,
 // the row and rules are kept for history.

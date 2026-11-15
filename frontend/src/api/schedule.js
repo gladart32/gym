@@ -9,6 +9,8 @@ export const scheduleApi = {
   get: () => http.get('/schedule', authed).then(data),
   // Правка одного правила (frequency, interval_n, weekdays, once_date, is_enabled)
   updateRule: (id, body) => http.put(`/schedule/rules/${id}`, body, authed).then(data),
+  // Удаление одного правила
+  removeRule: (id) => http.delete(`/schedule/rules/${id}`, authed).then(data),
   // Деактивация программы пользователя
   deactivate: (userProgramId) => http.delete(`/schedule/programs/${userProgramId}`, authed).then(data),
   // План на неделю (пн–вс), содержащую дату; без даты — текущая

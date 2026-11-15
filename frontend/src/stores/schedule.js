@@ -83,6 +83,32 @@ const useScheduleStore = defineStore('schedule', {
       }
     },
 
+    // Удаление правила: исчезает из карточки программы и из плана недели
+    async removeRule(ruleId) {
+      try {
+        await scheduleApi.removeRule(ruleId)
+        for (const program of this.programs) {
+          const index = program.rules.findIndex((r) => r.id === ruleId)
+          if (index !== -1) {
+            program.rules.splice(index, 1)
+            break
+          }
+        }
+        await this.loadWeek(this.anchorDate)
+        return true
+      } catch (error) {
+        toast.error(error.message)
+        return false
+      }
+    },
+
+    // Остановка активной программы по id самой программы
+    async stopProgram(programId) {
+      const active = this.programs.find((p) => p.program_id === programId)
+      if (!active) return false
+      return this.deactivate(active.id)
+    },
+
     async deactivate(userProgramId) {
       try {
         await scheduleApi.deactivate(userProgramId)

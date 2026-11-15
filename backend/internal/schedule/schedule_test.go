@@ -329,6 +329,7 @@ func TestScheduleRequireAuth(t *testing.T) {
 		{http.MethodGet, "/api/v1/schedule"},
 		{http.MethodGet, "/api/v1/schedule/week"},
 		{http.MethodPut, "/api/v1/schedule/rules/1"},
+		{http.MethodDelete, "/api/v1/schedule/rules/1"},
 		{http.MethodDelete, "/api/v1/schedule/programs/1"},
 		{http.MethodPost, "/api/v1/programs/1/select"},
 	} {
@@ -622,4 +623,88 @@ func doCode(t *testing.T, router *gin.Engine, method, path, bearer string, body 
 	t.Helper()
 	rec, _ := do(t, router, method, path, bearer, body)
 	return rec.Code
+}
+
+func deleteRule(t *testing.T, router *gin.Engine, bearer string, ruleID uint32) int {
+	t.Helper()
+	return doCode(t, router, http.MethodDelete, fmt.Sprintf("/api/v1/schedule/rules/%d", ruleID), bearer, nil)
+}
+
+// Started programs must be isolated from program edits: user rules keep
+// the snapshot of the day name/position taken at select time.
+func TestProgramUpdateDoesNotAffectStartedRules(t *testing.T) {
+	router, a := setup(t)
+	bearer := registerAndLogin(t, router, a)
+
+	programID := createProgramWithDays(t, router, bearer, "До правки", []map[string]any{
+		day("Старое имя", weekly(1, "mon")),
+		day("Второй", weekly(1, "wed")),
+	})
+	_, _, up := selectProgram(t, router, bearer, programID, "2026-11-02")
+	if len(up.Rules) != 2 || up.Rules[0].DayName != "Старое имя" || up.Rules[0].DayPosition != 1 {
+		t.Fatalf("unexpected rules: %+v", up.Rules)
+	}
+
+	// Rewrite the program: different day names, order and schedule.
+	if c := doCode(t, router, http.MethodPut, fmt.Sprintf("/api/v1/programs/%d", programID), bearer, map[string]any{
+		"name": "После правки",
+		"days": []map[string]any{day("Новое имя", weekly(1, "sat"))},
+	}); c != http.StatusOK {
+		t.Fatalf("update program: %d", c)
+	}
+
+	// The personal rules keep the snapshot: same names, positions, plan.
+	sched := getSchedule(t, router, bearer)
+	if len(sched) != 1 || len(sched[0].Rules) != 2 {
+		t.Fatalf("rules must survive the program update: %+v", sched)
+	}
+	rules := sched[0].Rules
+	if rules[0].DayName != "Старое имя" || rules[0].DayPosition != 1 || rules[1].DayName != "Второй" || rules[1].DayPosition != 2 {
+		t.Fatalf("rule snapshot must be frozen: %+v", rules)
+	}
+	plan := getWeek(t, router, bearer, "2026-11-02")
+	if len(dayEntries(t, plan, "2026-11-02")) != 1 || len(dayEntries(t, plan, "2026-11-04")) != 1 {
+		t.Fatalf("plan must keep the pre-update schedule: %+v", plan)
+	}
+	if len(entriesOn(plan, "2026-11-07")) != 0 {
+		t.Fatalf("program edit must not leak into the started schedule: %+v", plan)
+	}
+}
+
+func TestDeleteRule(t *testing.T) {
+	router, a := setup(t)
+	user1 := registerAndLogin(t, router, a)
+	user2 := registerAndLogin(t, router, a)
+
+	programID := createProgramWithDays(t, router, user1, "Удаление", []map[string]any{
+		day("Первый", weekly(1, "mon")),
+		day("Второй", weekly(1, "wed")),
+	})
+	_, _, up := selectProgram(t, router, user1, programID, "2026-11-02")
+	if len(up.Rules) != 2 {
+		t.Fatalf("expected 2 rules, got %d", len(up.Rules))
+	}
+
+	// Foreign user cannot delete.
+	if c := deleteRule(t, router, user2, up.Rules[0].ID); c != http.StatusForbidden {
+		t.Fatalf("foreign delete: expected 403, got %d", c)
+	}
+
+	// Unknown rule -> 404.
+	if c := deleteRule(t, router, user1, 4294967295); c != http.StatusNotFound {
+		t.Fatalf("unknown rule: expected 404, got %d", c)
+	}
+
+	// Owner deletes the monday rule: only wednesday stays in the plan.
+	if c := deleteRule(t, router, user1, up.Rules[0].ID); c != http.StatusOK {
+		t.Fatalf("delete rule: %d", c)
+	}
+	sched := getSchedule(t, router, user1)
+	if len(sched) != 1 || len(sched[0].Rules) != 1 || sched[0].Rules[0].DayName != "Второй" {
+		t.Fatalf("deleted rule must leave the schedule: %+v", sched)
+	}
+	plan := getWeek(t, router, user1, "2026-11-02")
+	if len(entriesOn(plan, "2026-11-02")) != 0 || len(dayEntries(t, plan, "2026-11-04")) != 1 {
+		t.Fatalf("deleted rule must leave the plan: %+v", plan)
+	}
 }

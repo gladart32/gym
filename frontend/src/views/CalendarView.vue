@@ -153,6 +153,13 @@ function onRuleEnabled(rule, value) {
   saveRule(rule)
 }
 
+async function removeRule(rule) {
+  const ok = await store.removeRule(rule.id)
+  if (ok) {
+    toast.success(t('schedule.ruleDeleted'))
+  }
+}
+
 // --- Деактивация программы ---
 
 const deleteOpen = ref(false)
@@ -334,11 +341,20 @@ onMounted(() => {
                   />
                 </template>
 
-                <div class="ml-auto">
+                <div class="ml-auto flex items-center gap-1">
                   <Switch
                     :model-value="rule.is_enabled"
                     @update:model-value="onRuleEnabled(rule, $event)"
                   />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    class="text-destructive"
+                    :aria-label="$t('schedule.deleteRule')"
+                    @click="removeRule(rule)"
+                  >
+                    <Trash2 />
+                  </Button>
                 </div>
               </div>
             </CardContent>
