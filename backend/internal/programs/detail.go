@@ -2,6 +2,7 @@ package programs
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -41,11 +42,22 @@ type Exercise struct {
 	Sets         []Set   `json:"sets"`
 }
 
+// Schedule is the recurring rule of a program day:
+// daily — every interval_n days, weekly — on the given weekdays every
+// interval_n weeks, once — on the exact date (once_date).
+type Schedule struct {
+	Frequency string   `json:"frequency"`
+	IntervalN uint8    `json:"interval_n"`
+	Weekdays  []string `json:"weekdays"`
+	OnceDate  *string  `json:"once_date"` // YYYY-MM-DD, weekly/daily only
+}
+
 // Day is one training day (group of exercises) of the program.
 type Day struct {
 	ID        uint32     `json:"id"`
 	Position  uint8      `json:"position"`
 	Name      string     `json:"name"`
+	Schedule  *Schedule  `json:"schedule"`
 	Exercises []Exercise `json:"exercises"`
 }
 
@@ -78,6 +90,12 @@ const detailDaysQuery = `
 	FROM program_days
 	WHERE program_id = ?
 	ORDER BY position, id`
+
+const detailSchedulesQuery = `
+	SELECT program_day_id, frequency, interval_n, weekdays, once_date
+	FROM program_schedule_rules
+	WHERE program_day_id IN (?)
+	ORDER BY program_day_id`
 
 const detailExercisesQueryTmpl = `
 	SELECT
@@ -126,6 +144,31 @@ type dayRow struct {
 	ID       uint32 `db:"id"`
 	Position uint8  `db:"position"`
 	Name     string `db:"name"`
+}
+
+type scheduleRow struct {
+	ProgramDayID uint32         `db:"program_day_id"`
+	Frequency    string         `db:"frequency"`
+	IntervalN    uint8          `db:"interval_n"`
+	Weekdays     sql.NullString `db:"weekdays"` // MySQL SET: "mon,wed,fri", NULL for daily/once
+	OnceDate     sql.NullTime   `db:"once_date"`
+}
+
+// toSchedule converts the raw row into the API shape (dates as YYYY-MM-DD).
+func (r scheduleRow) toSchedule() *Schedule {
+	s := &Schedule{
+		Frequency: r.Frequency,
+		IntervalN: r.IntervalN,
+		Weekdays:  []string{},
+	}
+	if r.Weekdays.Valid {
+		s.Weekdays = parseWeekdays(r.Weekdays.String)
+	}
+	if r.OnceDate.Valid {
+		date := r.OnceDate.Time.Format("2006-01-02")
+		s.OnceDate = &date
+	}
+	return s
 }
 
 type exerciseRow struct {
@@ -223,6 +266,22 @@ func (s *Service) Detail(ctx context.Context, userID uint32, isAdmin bool, id ui
 
 	if len(dayIDs) == 0 {
 		return d, nil
+	}
+
+	var schRows []scheduleRow
+	schQuery, schArgs, err := sqlx.In(detailSchedulesQuery, dayIDs)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.db.SelectContext(ctx, &schRows, schQuery, schArgs...); err != nil {
+		return nil, err
+	}
+	for _, sr := range schRows {
+		idx, ok := dayIndex[sr.ProgramDayID]
+		if !ok {
+			continue
+		}
+		d.Days[idx].Schedule = sr.toSchedule()
 	}
 
 	var exRows []exerciseRow

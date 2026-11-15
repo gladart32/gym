@@ -3,6 +3,7 @@ package programs
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -21,7 +22,18 @@ type Input struct {
 
 type DayInput struct {
 	Name      string          `json:"name"`
+	Schedule  *ScheduleInput  `json:"schedule"`
 	Exercises []ExerciseInput `json:"exercises"`
+}
+
+// ScheduleInput is the recurrence rule of a day:
+// daily — every interval_n days; weekly — on weekdays every interval_n
+// weeks; once — on the exact date. Nil means the day has no schedule.
+type ScheduleInput struct {
+	Frequency string   `json:"frequency"`
+	IntervalN uint8    `json:"interval_n"`
+	Weekdays  []string `json:"weekdays"`
+	OnceDate  *string  `json:"once_date"` // YYYY-MM-DD, required for once
 }
 
 type ExerciseInput struct {
@@ -76,6 +88,9 @@ const (
 	deleteProgramQuery  = `DELETE FROM programs WHERE id = ?`
 	deleteDaysQuery     = `DELETE FROM program_days WHERE program_id = ?`
 	insertDayQuery      = `INSERT INTO program_days (program_id, position, name) VALUES (?, ?, ?)`
+	insertScheduleQuery = `
+		INSERT INTO program_schedule_rules (program_day_id, frequency, interval_n, weekdays, once_date)
+		VALUES (?, ?, ?, ?, ?)`
 	insertExerciseQuery = `INSERT INTO program_exercises (program_day_id, exercise_id, position, rest_after_sec) VALUES (?, ?, ?, ?)`
 	insertSetQuery      = `
 		INSERT INTO program_sets (program_exercise_id, set_number, reps, weight_kg, duration_sec, distance_m, rest_sec)
@@ -87,6 +102,14 @@ const (
 func (in *Input) toStructure() ([]dayInsert, error) {
 	days := make([]dayInsert, 0, len(in.Days))
 	for _, d := range in.Days {
+		var schedule *scheduleInsert
+		if d.Schedule != nil {
+			s, err := d.Schedule.validate()
+			if err != nil {
+				return nil, err
+			}
+			schedule = &s
+		}
 		exs := make([]exInsert, 0, len(d.Exercises))
 		for _, e := range d.Exercises {
 			sets := make([]setInsert, 0, len(e.Sets))
@@ -117,7 +140,7 @@ func (in *Input) toStructure() ([]dayInsert, error) {
 				sets:         sets,
 			})
 		}
-		days = append(days, dayInsert{name: trim(d.Name), exercises: exs})
+		days = append(days, dayInsert{name: trim(d.Name), schedule: schedule, exercises: exs})
 	}
 	return days, nil
 }
@@ -140,6 +163,11 @@ func (in *Input) validate() error {
 		if len(d.Exercises) > MaxExercisesPerDay {
 			return ErrTooManyItems
 		}
+		if d.Schedule != nil {
+			if _, err := d.Schedule.validate(); err != nil {
+				return err
+			}
+		}
 		for _, e := range d.Exercises {
 			if len(e.Sets) > MaxSetsPerExercise {
 				return ErrTooManyItems
@@ -147,6 +175,74 @@ func (in *Input) validate() error {
 		}
 	}
 	return nil
+}
+
+var validWeekdays = map[string]struct{}{
+	"mon": {}, "tue": {}, "wed": {}, "thu": {}, "fri": {}, "sat": {}, "sun": {},
+}
+
+// ValidatedSchedule is a normalized recurrence rule ready for storage.
+type ValidatedSchedule struct {
+	IntervalN uint8
+	Weekdays  string     // canonical "mon,wed,fri"; empty for daily/once
+	OnceDate  *time.Time // set for once
+}
+
+// NormalizeSchedule validates a recurrence rule and returns its storage
+// shape; shared with the schedule domain (user rule edits).
+func NormalizeSchedule(frequency string, intervalN uint8, weekdays []string, onceDate *string) (ValidatedSchedule, error) {
+	out := ValidatedSchedule{IntervalN: intervalN}
+	switch frequency {
+	case "daily":
+		if len(weekdays) != 0 || onceDate != nil || out.IntervalN == 0 {
+			return out, ErrInvalidSchedule
+		}
+		return out, nil
+	case "weekly":
+		if onceDate != nil || len(weekdays) == 0 || len(weekdays) > len(weekdayOrder) || out.IntervalN == 0 {
+			return out, ErrInvalidSchedule
+		}
+		set := make(map[string]struct{}, len(weekdays))
+		for _, w := range weekdays {
+			w = strings.ToLower(strings.TrimSpace(w))
+			if _, ok := validWeekdays[w]; !ok {
+				return out, ErrInvalidSchedule
+			}
+			if _, dup := set[w]; dup {
+				return out, ErrInvalidSchedule
+			}
+			set[w] = struct{}{}
+		}
+		out.Weekdays = joinWeekdays(set)
+		return out, nil
+	case "once":
+		if len(weekdays) != 0 || onceDate == nil {
+			return out, ErrInvalidSchedule
+		}
+		date, err := time.Parse("2006-01-02", strings.TrimSpace(*onceDate))
+		if err != nil {
+			return out, ErrInvalidSchedule
+		}
+		out.IntervalN = 1
+		out.OnceDate = &date
+		return out, nil
+	default:
+		return out, ErrInvalidSchedule
+	}
+}
+
+// validate checks the recurrence rule and returns it in the insert shape.
+func (in *ScheduleInput) validate() (scheduleInsert, error) {
+	v, err := NormalizeSchedule(in.Frequency, in.IntervalN, in.Weekdays, in.OnceDate)
+	if err != nil {
+		return scheduleInsert{}, err
+	}
+	return scheduleInsert{
+		frequency: in.Frequency,
+		intervalN: v.IntervalN,
+		weekdays:  v.Weekdays,
+		onceDate:  v.OnceDate,
+	}, nil
 }
 
 func trim(s string) string {
@@ -181,7 +277,30 @@ type exInsert struct {
 
 type dayInsert struct {
 	name      string
+	schedule  *scheduleInsert
 	exercises []exInsert
+}
+
+// scheduleInsert is a validated recurrence rule ready for INSERT.
+type scheduleInsert struct {
+	frequency string
+	intervalN uint8
+	weekdays  string     // canonical "mon,wed,fri"; empty for daily/once
+	onceDate  *time.Time // set for once
+}
+
+// values returns the driver args: empty weekdays must be stored as NULL
+// (CHECK constraint), not as an empty SET string.
+func (s *scheduleInsert) values() (uint8, any, any) {
+	var weekdays any
+	if s.weekdays != "" {
+		weekdays = s.weekdays
+	}
+	var onceDate any
+	if s.onceDate != nil {
+		onceDate = s.onceDate
+	}
+	return s.intervalN, weekdays, onceDate
 }
 
 // Create stores a new program with the whole structure in one transaction
@@ -305,6 +424,11 @@ func (s *Service) Delete(ctx context.Context, userID uint32, isAdmin bool, id ui
 const copyDaysQuery = `
 	SELECT id, position, name FROM program_days WHERE program_id = ? ORDER BY position, id`
 
+const copySchedulesQuery = `
+	SELECT program_day_id, frequency, interval_n, weekdays, once_date
+	FROM program_schedule_rules
+	WHERE program_day_id IN (?)`
+
 const copyExercisesQuery = `
 	SELECT id, exercise_id, program_day_id, position, rest_after_sec
 	FROM program_exercises
@@ -373,6 +497,35 @@ func (s *Service) Copy(ctx context.Context, userID uint32, isAdmin bool, id uint
 		return 0, err
 	}
 
+	// Recurrence rules travel with the days.
+	scheduleByDay := make(map[uint32]scheduleInsert, len(srcDays))
+	if len(srcDays) > 0 {
+		srcDayIDs := make([]uint32, 0, len(srcDays))
+		for _, sd := range srcDays {
+			srcDayIDs = append(srcDayIDs, sd.ID)
+		}
+		schQuery, schArgs, err := sqlx.In(copySchedulesQuery, srcDayIDs)
+		if err != nil {
+			return 0, err
+		}
+		var srcSchedules []scheduleRow
+		if err := tx.SelectContext(ctx, &srcSchedules, schQuery, schArgs...); err != nil {
+			return 0, err
+		}
+		for _, sr := range srcSchedules {
+			ins := scheduleInsert{
+				frequency: sr.Frequency,
+				intervalN: sr.IntervalN,
+				weekdays:  sr.Weekdays.String,
+			}
+			if sr.OnceDate.Valid {
+				d := sr.OnceDate.Time
+				ins.onceDate = &d
+			}
+			scheduleByDay[sr.ProgramDayID] = ins
+		}
+	}
+
 	dayMap := make(map[uint32]uint32, len(srcDays))
 	for _, sd := range srcDays {
 		r, err := tx.ExecContext(ctx, insertDayQuery, newProgramID, sd.Position, sd.Name)
@@ -382,6 +535,13 @@ func (s *Service) Copy(ctx context.Context, userID uint32, isAdmin bool, id uint
 		newDayID, err := r.LastInsertId()
 		if err != nil {
 			return 0, err
+		}
+		if rule, ok := scheduleByDay[sd.ID]; ok {
+			interval, weekdays, onceDate := rule.values()
+			if _, err := tx.ExecContext(ctx, insertScheduleQuery,
+				newDayID, rule.frequency, interval, weekdays, onceDate); err != nil {
+				return 0, err
+			}
 		}
 		dayMap[sd.ID] = uint32(newDayID)
 	}
@@ -451,7 +611,7 @@ func (s *Service) Copy(ctx context.Context, userID uint32, isAdmin bool, id uint
 	return newProgramID, nil
 }
 
-// insertStructure writes days -> exercises -> sets preserving the slice order.
+// insertStructure writes days -> schedules -> exercises -> sets preserving the slice order.
 func insertStructure(ctx context.Context, tx *sqlx.Tx, programID uint32, days []dayInsert) error {
 	for i, d := range days {
 		res, err := tx.ExecContext(ctx, insertDayQuery, programID, i+1, d.name)
@@ -461,6 +621,13 @@ func insertStructure(ctx context.Context, tx *sqlx.Tx, programID uint32, days []
 		dayID, err := res.LastInsertId()
 		if err != nil {
 			return err
+		}
+		if d.schedule != nil {
+			interval, weekdays, onceDate := d.schedule.values()
+			if _, err := tx.ExecContext(ctx, insertScheduleQuery,
+				dayID, d.schedule.frequency, interval, weekdays, onceDate); err != nil {
+				return err
+			}
 		}
 		for j, e := range d.exercises {
 			res, err := tx.ExecContext(ctx, insertExerciseQuery, dayID, e.exerciseID, j+1, e.restAfterSec)

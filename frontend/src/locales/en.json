@@ -118,7 +118,58 @@
     "noEditRights": "This workout cannot be edited"
   },
   "calendar": {
-    "description": "Your workout schedule will be here"
+    "description": "Your weekly workout schedule"
+  },
+  "weekdays": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "weekdaysLong": {
+    "mon": "Monday",
+    "tue": "Tuesday",
+    "wed": "Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday",
+    "sat": "Saturday",
+    "sun": "Sunday"
+  },
+  "schedule": {
+    "weekRange": "{from} – {to}",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week",
+    "today": "Today",
+    "noPlans": "Nothing scheduled for this week",
+    "noProgramsTitle": "No active programs",
+    "noProgramsHint": "Open a workout and press “Start program” — it will appear in your schedule",
+    "chooseProgram": "Choose a program",
+    "activePrograms": "Active programs",
+    "deactivate": "Remove from schedule",
+    "deactivateConfirmTitle": "Remove the program from your schedule?",
+    "deactivateConfirmHint": "The program stays in “Workouts” but disappears from the calendar",
+    "deactivated": "Program removed from the schedule",
+    "selected": "In schedule",
+    "startProgram": "Start program",
+    "startDate": "Start date",
+    "programStarted": "Program added to your schedule",
+    "scheduleLabel": "Schedule",
+    "scheduleNone": "No schedule",
+    "modeWeekly": "Weekdays",
+    "modeDaily": "Every N days",
+    "modeOnce": "Once",
+    "modeNone": "No schedule",
+    "everyWeeks": "Every {n} wk.",
+    "everyDays": "Every {n} d.",
+    "intervalWeeks": "interval, wk.",
+    "intervalDays": "interval, d.",
+    "onceDate": "Workout date",
+    "selectDayHint": "Pick the weekdays when this workout takes place",
+    "ruleUpdated": "Schedule updated",
+    "ruleUpdateFailed": "Failed to update the schedule"
   },
   "profile": {
     "account": "Account",

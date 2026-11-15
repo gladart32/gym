@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ArrowLeft, Copy, Download, Pencil, Trash2 } from '@lucide/vue'
+import { ArrowLeft, CalendarPlus, Copy, Download, Pencil, Trash2 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -23,15 +23,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useExercisesStore } from '@/stores/exercises'
 import useProgramsStore from '@/stores/programs'
+import useScheduleStore from '@/stores/schedule'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const store = useProgramsStore()
 const exercisesStore = useExercisesStore()
+const scheduleStore = useScheduleStore()
 
 const { trackingTypeNames } = storeToRefs(exercisesStore)
 
@@ -45,6 +49,44 @@ const programId = computed(() => Number(route.params.id))
 
 const canEdit = computed(() => detail.value?.can_edit ?? false)
 const canCopy = computed(() => detail.value?.is_ready && !detail.value?.can_edit)
+
+// Программа уже активна в расписании пользователя
+const isInSchedule = computed(
+  () => detail.value != null && scheduleStore.programs.some((p) => p.program_id === detail.value.id),
+)
+
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const startOpen = ref(false)
+const startDate = ref(todayStr())
+const starting = ref(false)
+
+async function startProgram() {
+  starting.value = true
+  const ok = await scheduleStore.selectProgram(detail.value.id, startDate.value)
+  starting.value = false
+  startOpen.value = false
+  if (ok) {
+    toast.success(t('schedule.programStarted'))
+  }
+}
+
+// Бейджи расписания дня: «Пн Ср Пт», «Каждые 2 нед.», «Каждые 2 дн.», дата
+function scheduleBadges(day) {
+  const s = day.schedule
+  if (!s) return []
+  if (s.frequency === 'weekly') {
+    const badges = [(s.weekdays ?? []).map((w) => t(`weekdays.${w}`)).join(' ')]
+    if (s.interval_n > 1) badges.push(t('schedule.everyWeeks', { n: s.interval_n }))
+    return badges
+  }
+  if (s.frequency === 'daily') return [t('schedule.everyDays', { n: s.interval_n })]
+  if (s.frequency === 'once') return [s.once_date]
+  return []
+}
 
 // Набор колонок таблицы подходов зависит от типа записи упражнения каталога
 function columnsFor(trackingType) {
@@ -116,8 +158,10 @@ async function removeProgram() {
 }
 
 onMounted(async () => {
-  // имена типов записи берём из словаря каталога (кэшируется)
+  // имена типов записи берём из словаря каталога (кэшируется),
+  // расписание — для состояния «В расписании»
   exercisesStore.loadMeta()
+  scheduleStore.load()
   detail.value = await store.loadDetail(programId.value)
   loading.value = false
 })
@@ -141,6 +185,13 @@ watch(programId, async (id, prev) => {
         {{ $t('programs.backToList') }}
       </Button>
       <div v-if="detail" class="flex flex-wrap items-center gap-2">
+        <Badge v-if="isInSchedule" variant="secondary" class="h-8 px-3">
+          {{ $t('schedule.selected') }}
+        </Badge>
+        <Button v-else variant="outline" @click="startOpen = true">
+          <CalendarPlus />
+          {{ $t('schedule.startProgram') }}
+        </Button>
         <Button variant="outline" :disabled="exporting" @click="exportPdf">
           <Download />
           {{ $t('programs.downloadPdf') }}
@@ -205,8 +256,11 @@ watch(programId, async (id, prev) => {
       <Card v-for="day in detail.days" :key="day.id">
         <CardHeader>
           <CardTitle>{{ day.name }}</CardTitle>
-          <CardDescription>
-            {{ $t('programs.exercisesCount', day.exercises.length) }}
+          <CardDescription class="flex flex-wrap items-center gap-1.5">
+            <span>{{ $t('programs.exercisesCount', day.exercises.length) }}</span>
+            <Badge v-for="(badge, i) in scheduleBadges(day)" :key="i" variant="outline">
+              {{ badge }}
+            </Badge>
           </CardDescription>
         </CardHeader>
         <CardContent class="flex flex-col gap-3">
@@ -295,6 +349,27 @@ watch(programId, async (id, prev) => {
             </Button>
             <Button variant="destructive" :disabled="deleting" @click="removeProgram">
               {{ $t('programs.delete') }}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog v-model:open="startOpen">
+        <DialogContent class="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{{ $t('schedule.startProgram') }}</DialogTitle>
+            <DialogDescription>{{ detail.name }}</DialogDescription>
+          </DialogHeader>
+          <div class="flex flex-col gap-1.5">
+            <Label for="start-date">{{ $t('schedule.startDate') }}</Label>
+            <Input id="start-date" v-model="startDate" type="date" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" @click="startOpen = false">
+              {{ $t('programs.cancel') }}
+            </Button>
+            <Button :disabled="starting" @click="startProgram">
+              {{ $t('schedule.startProgram') }}
             </Button>
           </DialogFooter>
         </DialogContent>

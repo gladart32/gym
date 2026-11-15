@@ -32,4 +32,8 @@ var (
 
 	// ErrUnknownExercise references an exercise missing from the active catalog.
 	ErrUnknownExercise = errors.New("days contain unknown or inactive exercise ids")
+
+	// ErrInvalidSchedule is a malformed day recurrence rule
+	// (bad frequency, weekdays, interval or once date).
+	ErrInvalidSchedule = errors.New("invalid schedule: frequency must be daily, weekly or once with matching weekdays/once_date and interval_n >= 1")
 )

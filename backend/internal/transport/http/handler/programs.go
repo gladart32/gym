@@ -206,7 +206,8 @@ func (h *Programs) domainError(c *gin.Context, err error, fallback string) {
 		errors.Is(err, programs.ErrInvalidSetNumber),
 		errors.Is(err, programs.ErrDuplicateSetNumber),
 		errors.Is(err, programs.ErrInvalidWeight),
-		errors.Is(err, programs.ErrUnknownExercise):
+		errors.Is(err, programs.ErrUnknownExercise),
+		errors.Is(err, programs.ErrInvalidSchedule):
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}

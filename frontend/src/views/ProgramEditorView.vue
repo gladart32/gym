@@ -32,6 +32,9 @@ const MAX_SETS_PER_EXERCISE = 50
 const MIN_WEIGHT_KG = -300 // отрицательный вес = помощь (жим с противовесом)
 const MAX_WEIGHT_KG = 500
 
+// Порядок дней недели синхронизирован с canonical-порядком MySQL SET
+const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
 const FIELD_KEYS = {
   weightKg: 'weight_kg',
   reps: 'reps',
@@ -73,12 +76,33 @@ function emptySet() {
   return { uid: uid(), reps: '', weightKg: '', durationSec: '', distanceM: '', restSec: '' }
 }
 
+// Расписание дня в форме: mode — представление для UI
+// ('none' | 'weekly' | 'daily' | 'once'); buildBody маппит его в API-формат.
+function emptySchedule() {
+  return { mode: 'none', intervalN: 1, weekdays: [], onceDate: '' }
+}
+
+function toggleWeekday(day, code) {
+  const list = day.schedule.weekdays
+  const index = list.indexOf(code)
+  if (index === -1) {
+    list.push(code)
+  } else {
+    list.splice(index, 1)
+  }
+}
+
 function addDay() {
   if (form.days.length >= MAX_DAYS) {
     toast.error(t('programs.tooManyDays'))
     return
   }
-  form.days.push({ uid: uid(), name: `${t('programs.dayDefault')} ${form.days.length + 1}`, exercises: [] })
+  form.days.push({
+    uid: uid(),
+    name: `${t('programs.dayDefault')} ${form.days.length + 1}`,
+    schedule: emptySchedule(),
+    exercises: [],
+  })
 }
 
 function removeDay(index) {
@@ -188,6 +212,14 @@ function validate() {
     return false
   }
   for (const day of form.days) {
+    if (day.schedule.mode === 'weekly' && day.schedule.weekdays.length === 0) {
+      toast.error(t('schedule.selectDayHint'))
+      return false
+    }
+    if (day.schedule.mode === 'once' && !day.schedule.onceDate) {
+      toast.error(t('schedule.onceDate'))
+      return false
+    }
     for (const exercise of day.exercises) {
       for (const set of exercise.sets) {
         if (set.weightKg !== '' && set.weightKg != null) {
@@ -203,6 +235,45 @@ function validate() {
   return true
 }
 
+// scheduleBody маппит форму расписания в API-формат (schedule: null = нет правила)
+function scheduleBody(schedule) {  switch (schedule.mode) {
+    case 'weekly':
+      return {
+        frequency: 'weekly',
+        interval_n: Math.max(1, Math.round(Number(schedule.intervalN) || 1)),
+        weekdays: WEEKDAYS.filter((w) => schedule.weekdays.includes(w)),
+        once_date: null,
+      }
+    case 'daily':
+      return {
+        frequency: 'daily',
+        interval_n: Math.max(1, Math.round(Number(schedule.intervalN) || 1)),
+        weekdays: [],
+        once_date: null,
+      }
+    case 'once':
+      return {
+        frequency: 'once',
+        interval_n: 1,
+        weekdays: [],
+        once_date: schedule.onceDate,
+      }
+    default:
+      return null
+  }
+}
+
+// scheduleFromApi маппит правило из API в форму (null → 'none')
+function scheduleFromApi(schedule) {
+  const form = emptySchedule()
+  if (!schedule) return form
+  form.mode = schedule.frequency
+  form.intervalN = schedule.interval_n || 1
+  form.weekdays = [...(schedule.weekdays ?? [])]
+  form.onceDate = schedule.once_date ?? ''
+  return form
+}
+
 function buildBody() {
   return {
     name: form.name.trim(),
@@ -212,6 +283,7 @@ function buildBody() {
     is_published: isAdmin.value ? form.isPublished : false,
     days: form.days.map((day) => ({
       name: day.name.trim(),
+      schedule: scheduleBody(day.schedule),
       exercises: day.exercises.map((exercise) => ({
         exercise_id: exercise.exerciseId,
         rest_after_sec: intOrNull(exercise.restAfterSec),
@@ -269,6 +341,7 @@ async function loadForEdit() {
   form.days = detail.days.map((day) => ({
     uid: uid(),
     name: day.name,
+    schedule: scheduleFromApi(day.schedule),
     exercises: day.exercises.map((exercise) => ({
       uid: uid(),
       exerciseId: exercise.exercise_id,
@@ -394,6 +467,73 @@ onMounted(() => {
             >
               <Trash2 />
             </Button>
+          </div>
+
+          <div class="bg-muted/40 flex flex-wrap items-center gap-2 rounded-lg border p-2">
+            <span class="text-muted-foreground pl-1 text-xs font-medium">
+              {{ $t('schedule.scheduleLabel') }}
+            </span>
+            <Select v-model="day.schedule.mode" class="w-fit">
+              <SelectTrigger class="h-7 w-44 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{{ $t('schedule.modeNone') }}</SelectItem>
+                <SelectItem value="weekly">{{ $t('schedule.modeWeekly') }}</SelectItem>
+                <SelectItem value="daily">{{ $t('schedule.modeDaily') }}</SelectItem>
+                <SelectItem value="once">{{ $t('schedule.modeOnce') }}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div
+              v-if="day.schedule.mode === 'weekly'"
+              class="flex flex-wrap items-center gap-1.5"
+            >
+              <Button
+                v-for="code in WEEKDAYS"
+                :key="code"
+                type="button"
+                size="sm"
+                class="h-7 px-2 text-xs"
+                :variant="day.schedule.weekdays.includes(code) ? 'default' : 'outline'"
+                :aria-pressed="day.schedule.weekdays.includes(code)"
+                @click="toggleWeekday(day, code)"
+              >
+                {{ $t(`weekdays.${code}`) }}
+              </Button>
+              <span class="text-muted-foreground pl-1 text-xs">
+                {{ $t('schedule.intervalWeeks') }}
+              </span>
+              <Input
+                :model-value="day.schedule.intervalN"
+                type="number"
+                min="1"
+                max="255"
+                class="h-7 w-16"
+                @update:model-value="day.schedule.intervalN = $event"
+              />
+            </div>
+
+            <div v-else-if="day.schedule.mode === 'daily'" class="flex items-center gap-1.5">
+              <span class="text-muted-foreground text-xs">{{ $t('schedule.intervalDays') }}</span>
+              <Input
+                :model-value="day.schedule.intervalN"
+                type="number"
+                min="1"
+                max="255"
+                class="h-7 w-16"
+                @update:model-value="day.schedule.intervalN = $event"
+              />
+            </div>
+
+            <div v-else-if="day.schedule.mode === 'once'" class="flex items-center gap-1.5">
+              <span class="text-muted-foreground text-xs">{{ $t('schedule.onceDate') }}</span>
+              <Input
+                v-model="day.schedule.onceDate"
+                type="date"
+                class="h-7 w-40"
+              />
+            </div>
           </div>
 
           <div

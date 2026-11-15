@@ -111,6 +111,8 @@ func setup(t *testing.T) (*gin.Engine, *app.App, fixture) {
 		handler.NewExercises(a.Log, a.Exercises),
 		handler.NewPrograms(a.Log, a.Programs),
 		a.Programs,
+		handler.NewSchedule(a.Log, a.Schedule),
+		a.Schedule,
 	)
 
 	cleanCatalog(t, a)

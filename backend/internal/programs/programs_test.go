@@ -48,10 +48,18 @@ type exerciseJSON struct {
 	Sets         []setJSON `json:"sets"`
 }
 
+type scheduleJSON struct {
+	Frequency string   `json:"frequency"`
+	IntervalN uint8    `json:"interval_n"`
+	Weekdays  []string `json:"weekdays"`
+	OnceDate  *string  `json:"once_date"`
+}
+
 type dayJSON struct {
 	ID        uint32         `json:"id"`
 	Position  uint8          `json:"position"`
 	Name      string         `json:"name"`
+	Schedule  *scheduleJSON  `json:"schedule"`
 	Exercises []exerciseJSON `json:"exercises"`
 }
 
@@ -110,6 +118,8 @@ func setup(t *testing.T) (*gin.Engine, *app.App, fixture) {
 		handler.NewExercises(a.Log, a.Exercises),
 		handler.NewPrograms(a.Log, a.Programs),
 		a.Programs,
+		handler.NewSchedule(a.Log, a.Schedule),
+		a.Schedule,
 	)
 
 	clean(t, a)
@@ -918,5 +928,162 @@ func TestNegativeWeightAllowed(t *testing.T) {
 	w := out.Days[0].Exercises[0].Sets[0].WeightKg
 	if w == nil || *w != -30 {
 		t.Fatalf("unexpected weight: %+v", w)
+	}
+}
+
+func TestProgramScheduleLifecycle(t *testing.T) {
+	router, a, fx := setup(t)
+	user1, _ := registerAndLogin(t, router, a)
+
+	// Three days: weekly mon/wed/fri, once on a date, daily every 2 days.
+	code, env, out := createProgram(t, router, user1, map[string]any{
+		"name": "С расписанием",
+		"days": []map[string]any{
+			{
+				"name": "База",
+				"schedule": map[string]any{
+					"frequency":  "weekly",
+					"interval_n": 1,
+					"weekdays":   []string{"mon", "wed", "fri"},
+				},
+				"exercises": []map[string]any{
+					{"exercise_id": fx.benchID, "sets": []map[string]any{{"set_number": 1, "reps": 10}}},
+				},
+			},
+			{
+				"name": "Разовая",
+				"schedule": map[string]any{
+					"frequency": "once",
+					"once_date": "2026-11-20",
+				},
+				"exercises": []map[string]any{},
+			},
+			{
+				"name": "Через день",
+				"schedule": map[string]any{
+					"frequency":  "daily",
+					"interval_n": 2,
+				},
+				"exercises": []map[string]any{},
+			},
+		},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("create: expected 200, got %d: %s", code, env.Message)
+	}
+
+	assertSchedules := func(tag string, days []dayJSON) {
+		t.Helper()
+		if len(days) != 3 {
+			t.Fatalf("%s: expected 3 days, got %d", tag, len(days))
+		}
+		s1, s2, s3 := days[0].Schedule, days[1].Schedule, days[2].Schedule
+		if s1 == nil || s1.Frequency != "weekly" || s1.IntervalN != 1 ||
+			len(s1.Weekdays) != 3 || s1.Weekdays[0] != "mon" || s1.Weekdays[1] != "wed" || s1.Weekdays[2] != "fri" || s1.OnceDate != nil {
+			t.Fatalf("%s: unexpected day1 schedule: %+v", tag, s1)
+		}
+		if s2 == nil || s2.Frequency != "once" || s2.OnceDate == nil || *s2.OnceDate != "2026-11-20" || len(s2.Weekdays) != 0 {
+			t.Fatalf("%s: unexpected day2 schedule: %+v", tag, s2)
+		}
+		if s3 == nil || s3.Frequency != "daily" || s3.IntervalN != 2 || len(s3.Weekdays) != 0 || s3.OnceDate != nil {
+			t.Fatalf("%s: unexpected day3 schedule: %+v", tag, s3)
+		}
+	}
+	assertSchedules("create", out.Days)
+
+	code, _, detail := getDetail(t, router, user1, out.ID, "")
+	if code != http.StatusOK {
+		t.Fatalf("detail: %d", code)
+	}
+	assertSchedules("detail", detail.Days)
+
+	// Copy carries the schedules to the personal copy.
+	rec, env := do(t, router, http.MethodPost, fmt.Sprintf("/api/v1/programs/%d/copy", out.ID), user1, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("copy: expected 200, got %d", rec.Code)
+	}
+	var copy programJSON
+	if err := json.Unmarshal(env.Data, &copy); err != nil {
+		t.Fatalf("unmarshal copy: %v", err)
+	}
+	assertSchedules("copy", copy.Days)
+
+	// Update replaces the schedules (day 1 loses the rule).
+	code = doCode(t, router, http.MethodPut, fmt.Sprintf("/api/v1/programs/%d", out.ID), user1, "", map[string]any{
+		"name": "С расписанием v2",
+		"days": []map[string]any{
+			{
+				"name":      "База",
+				"exercises": []map[string]any{},
+			},
+			{
+				"name": "Разовая",
+				"schedule": map[string]any{
+					"frequency": "once",
+					"once_date": "2026-12-01",
+				},
+				"exercises": []map[string]any{},
+			},
+		},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("update: %d", code)
+	}
+	_, _, updated := getDetail(t, router, user1, out.ID, "")
+	if len(updated.Days) != 2 || updated.Days[0].Schedule != nil {
+		t.Fatalf("schedules were not replaced: %+v", updated.Days)
+	}
+	if updated.Days[1].Schedule == nil || updated.Days[1].Schedule.OnceDate == nil || *updated.Days[1].Schedule.OnceDate != "2026-12-01" {
+		t.Fatalf("unexpected updated once rule: %+v", updated.Days[1].Schedule)
+	}
+}
+
+func TestProgramScheduleValidation(t *testing.T) {
+	router, a, _ := setup(t)
+	bearer, _ := registerAndLogin(t, router, a)
+
+	day := func(schedule map[string]any) map[string]any {
+		return map[string]any{"name": "D", "schedule": schedule, "exercises": []map[string]any{}}
+	}
+	cases := []struct {
+		name     string
+		schedule map[string]any
+	}{
+		{"unknown frequency", day(map[string]any{"frequency": "yearly", "interval_n": 1})},
+		{"weekly without weekdays", day(map[string]any{"frequency": "weekly", "interval_n": 1, "weekdays": []string{}})},
+		{"weekly invalid weekday", day(map[string]any{"frequency": "weekly", "interval_n": 1, "weekdays": []string{"funday"}})},
+		{"weekly duplicate weekday", day(map[string]any{"frequency": "weekly", "interval_n": 1, "weekdays": []string{"mon", "mon"}})},
+		{"weekly interval 0", day(map[string]any{"frequency": "weekly", "interval_n": 0, "weekdays": []string{"mon"}})},
+		{"weekly with once date", day(map[string]any{"frequency": "weekly", "interval_n": 1, "weekdays": []string{"mon"}, "once_date": "2026-11-20"})},
+		{"daily with weekdays", day(map[string]any{"frequency": "daily", "interval_n": 1, "weekdays": []string{"mon"}})},
+		{"daily interval 0", day(map[string]any{"frequency": "daily", "interval_n": 0})},
+		{"once without date", day(map[string]any{"frequency": "once"})},
+		{"once bad date", day(map[string]any{"frequency": "once", "once_date": "20-11-2026"})},
+		{"once with weekdays", day(map[string]any{"frequency": "once", "once_date": "2026-11-20", "weekdays": []string{"mon"}})},
+	}
+
+	for _, tc := range cases {
+		code, env, _ := createProgram(t, router, bearer, map[string]any{
+			"name": "X",
+			"days": []map[string]any{tc.schedule},
+		})
+		if code != http.StatusBadRequest {
+			t.Fatalf("%s: expected 400, got %d (%s)", tc.name, code, env.Message)
+		}
+	}
+
+	// Weekday case is normalized: "MON" is accepted.
+	code, _, out := createProgram(t, router, bearer, map[string]any{
+		"name": "X",
+		"days": []map[string]any{
+			day(map[string]any{"frequency": "weekly", "interval_n": 1, "weekdays": []string{"MON", " Sat "}}),
+		},
+	})
+	if code != http.StatusOK {
+		t.Fatalf("normalized weekdays: expected 200, got %d", code)
+	}
+	s := out.Days[0].Schedule
+	if s == nil || len(s.Weekdays) != 2 || s.Weekdays[0] != "mon" || s.Weekdays[1] != "sat" {
+		t.Fatalf("unexpected normalized weekdays: %+v", s)
 	}
 }

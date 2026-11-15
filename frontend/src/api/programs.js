@@ -11,4 +11,5 @@ export const programsApi = {
   update: (id, body) => http.put(`/programs/${id}`, body, authed).then(data),
   remove: (id) => http.delete(`/programs/${id}`, authed).then(data),
   copy: (id) => http.post(`/programs/${id}/copy`, null, authed).then(data),
+  select: (id, body = {}) => http.post(`/programs/${id}/select`, body, authed).then(data),
 }

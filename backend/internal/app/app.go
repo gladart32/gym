@@ -15,6 +15,7 @@ import (
 	"github.com/gladart32/gym/internal/logger"
 	"github.com/gladart32/gym/internal/profile"
 	"github.com/gladart32/gym/internal/programs"
+	"github.com/gladart32/gym/internal/schedule"
 	"github.com/gladart32/gym/internal/server"
 	"github.com/gladart32/gym/internal/tasks"
 	"github.com/gladart32/gym/internal/transport/http/handler"
@@ -30,6 +31,7 @@ type App struct {
 	Profile   *profile.Service
 	Exercises *exercises.Service
 	Programs  *programs.Service
+	Schedule  *schedule.Service
 	logCloser io.Closer
 }
 
@@ -71,6 +73,7 @@ func New(cfg *config.Config) (*App, error) {
 		Profile:   profile.NewService(db, log),
 		Exercises: exercises.NewService(db, log),
 		Programs:  programs.NewService(db, log),
+		Schedule:  schedule.NewService(db, log),
 		logCloser: logCloser,
 	}, nil
 }
@@ -101,7 +104,8 @@ func (a *App) HTTPServer() *server.Server {
 	profileH := handler.NewProfile(a.Log, a.Profile)
 	exercisesH := handler.NewExercises(a.Log, a.Exercises)
 	programsH := handler.NewPrograms(a.Log, a.Programs)
-	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth, profileH, a.Profile, exercisesH, programsH, a.Programs)
+	scheduleH := handler.NewSchedule(a.Log, a.Schedule)
+	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth, profileH, a.Profile, exercisesH, programsH, a.Programs, scheduleH, a.Schedule)
 }
 
 // TaskWorker builds the background worker (asynq server + scheduler).
