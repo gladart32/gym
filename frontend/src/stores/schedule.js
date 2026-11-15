@@ -58,11 +58,11 @@ const useScheduleStore = defineStore('schedule', {
       }
     },
 
-    async loadNext() {
+    async loadNext(from) {
       if (!useAuthStore().isAuthenticated) return
       this.nextLoading = true
       try {
-        this.nextWorkout = await scheduleApi.next()
+        this.nextWorkout = await scheduleApi.next(from)
       } catch (error) {
         toast.error(error.message)
       } finally {

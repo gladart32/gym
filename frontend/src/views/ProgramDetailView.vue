@@ -29,6 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useExercisesStore } from '@/stores/exercises'
 import useProgramsStore from '@/stores/programs'
 import useScheduleStore from '@/stores/schedule'
+import { todayStr } from '@/utils/date'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -54,11 +55,6 @@ const canCopy = computed(() => detail.value?.is_ready && !detail.value?.can_edit
 const isInSchedule = computed(
   () => detail.value != null && scheduleStore.programs.some((p) => p.program_id === detail.value.id),
 )
-
-function todayStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 const startOpen = ref(false)
 const startDate = ref(todayStr())

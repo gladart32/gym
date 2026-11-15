@@ -33,6 +33,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import useScheduleStore from '@/stores/schedule'
+import { shiftDays, todayStr } from '@/utils/date'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -40,17 +41,6 @@ const store = useScheduleStore()
 
 // Порядок дней недели синхронизирован с canonical-порядком MySQL SET
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-
-function todayStr() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function shiftDays(dateStr, days) {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const date = new Date(y, m - 1, d + days)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
 
 const today = todayStr()
 const anchor = ref(todayStr())
@@ -76,7 +66,7 @@ function nextWeek() {
 
 function goToday() {
   anchor.value = todayStr()
-  store.loadWeek('')
+  store.loadWeek(anchor.value)
 }
 
 function dayNumber(date) {
@@ -180,7 +170,7 @@ async function deactivate() {
 
 onMounted(() => {
   store.load()
-  store.loadWeek('')
+  store.loadWeek(anchor.value)
 })
 </script>
 

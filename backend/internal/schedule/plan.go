@@ -180,17 +180,27 @@ type NextWorkout struct {
 	Entries   []PlanEntry `json:"entries"`
 }
 
-// Next returns the closest scheduled workout of the user's active programs,
-// scanning from today (inclusive) for the nextWindowDays days.
-func (s *Service) Next(ctx context.Context, userID uint32) (*NextWorkout, error) {
+// Next returns the closest scheduled workout of the user's active programs.
+// The scan starts at from (inclusive; YYYY-MM-DD; the client passes its
+// local date so the server never guesses the user's "today") and covers
+// nextWindowDays days. Empty from = UTC today.
+func (s *Service) Next(ctx context.Context, userID uint32, from string) (*NextWorkout, error) {
+	start := today()
+	if from != "" {
+		parsed, err := time.Parse("2006-01-02", from)
+		if err != nil {
+			return nil, ErrInvalidDate
+		}
+		start = dateOnly(parsed)
+	}
+
 	ups, err := s.loadUserPrograms(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	from := today()
 	for i := 0; i < nextWindowDays; i++ {
-		d := from.AddDate(0, 0, i)
+		d := start.AddDate(0, 0, i)
 		entries := entriesFor(ups, d)
 		if len(entries) == 0 {
 			continue

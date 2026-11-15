@@ -686,9 +686,13 @@ func TestNextWorkout(t *testing.T) {
 
 	utcToday := time.Now().UTC().Format("2006-01-02")
 
-	getNext := func(t *testing.T, bearer string) (int, apiEnvelope, nextJSON) {
+	getNext := func(t *testing.T, bearer, from string) (int, apiEnvelope, nextJSON) {
 		t.Helper()
-		rec, env := do(t, router, http.MethodGet, "/api/v1/schedule/next", bearer, nil)
+		path := "/api/v1/schedule/next"
+		if from != "" {
+			path += "?from=" + from
+		}
+		rec, env := do(t, router, http.MethodGet, path, bearer, nil)
 		var out nextJSON
 		if env.Data != nil {
 			if err := json.Unmarshal(env.Data, &out); err != nil {
@@ -699,7 +703,7 @@ func TestNextWorkout(t *testing.T) {
 	}
 
 	// No active programs: the empty marker.
-	_, _, next := getNext(t, user3)
+	_, _, next := getNext(t, user3, "")
 	if next.Date != "" || next.DaysUntil != -1 || len(next.Entries) != 0 {
 		t.Fatalf("empty schedule must yield the none marker: %+v", next)
 	}
@@ -711,9 +715,22 @@ func TestNextWorkout(t *testing.T) {
 	if code, env, _ := selectProgram(t, router, user1, programID, utcToday); code != http.StatusOK {
 		t.Fatalf("select: %d %s", code, env.Message)
 	}
-	_, _, next = getNext(t, user1)
+	_, _, next = getNext(t, user1, "")
 	if next.Date != utcToday || next.DaysUntil != 0 || len(next.Entries) != 1 || next.Entries[0].DayName != "Каждый день" {
 		t.Fatalf("expected today's workout, got: %+v", next)
+	}
+
+	// The client passes its local date: from is inclusive, so a daily
+	// program yields that day itself with days_until=0.
+	tomorrow := time.Now().UTC().AddDate(0, 0, 1).Format("2006-01-02")
+	_, _, next = getNext(t, user1, tomorrow)
+	if next.Date != tomorrow || next.DaysUntil != 0 || len(next.Entries) != 1 {
+		t.Fatalf("expected the from day itself via from=%s, got: %+v", tomorrow, next)
+	}
+
+	// Malformed from -> 400.
+	if code, _, _ := getNext(t, user1, "not-a-date"); code != http.StatusBadRequest {
+		t.Fatalf("malformed from: expected 400, got %d", code)
 	}
 
 	// Weekly program on the weekday of today+3: days_until = 3.
@@ -730,12 +747,12 @@ func TestNextWorkout(t *testing.T) {
 	if code, env, _ := selectProgram(t, router, user2, program2, utcToday); code != http.StatusOK {
 		t.Fatalf("select: %d %s", code, env.Message)
 	}
-	_, _, next = getNext(t, user2)
+	_, _, next = getNext(t, user2, "")
 	if next.Date != in3Date || next.DaysUntil != 3 || len(next.Entries) != 1 || next.Entries[0].DayName != "Скоро" {
 		t.Fatalf("expected workout in 3 days (%s), got: %+v", in3Date, next)
 	}
 
-	// Foreign user and unauthenticated requests.
+	// Unauthenticated requests.
 	if c := doCode(t, router, http.MethodGet, "/api/v1/schedule/next", "", nil); c != http.StatusUnauthorized {
 		t.Fatalf("unauthenticated next: expected 401, got %d", c)
 	}

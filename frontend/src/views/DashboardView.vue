@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import useScheduleStore from '@/stores/schedule'
+import { todayStr } from '@/utils/date'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -43,7 +44,7 @@ const dateLabel = computed(() => {
 })
 
 onMounted(() => {
-  scheduleStore.loadNext()
+  scheduleStore.loadNext(todayStr())
 })
 </script>
 

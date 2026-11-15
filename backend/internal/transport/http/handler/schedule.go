@@ -126,14 +126,12 @@ func (h *Schedule) Week(c *gin.Context) {
 	response.Success(c, http.StatusOK, plan)
 }
 
-// Next handles GET /api/v1/schedule/next: the closest scheduled workout
-// on or after today.
+// Next handles GET /api/v1/schedule/next?from=YYYY-MM-DD: the closest
+// scheduled workout on or after the date (empty = UTC today).
 func (h *Schedule) Next(c *gin.Context) {
-	next, err := h.svc.Next(c.Request.Context(), middleware.UserIDFrom(c))
+	next, err := h.svc.Next(c.Request.Context(), middleware.UserIDFrom(c), c.Query("from"))
 	if err != nil {
-		h.log.ErrorContext(c.Request.Context(), "load next workout",
-			"error", err, "request_id", middleware.RequestIDFrom(c))
-		response.Error(c, http.StatusInternalServerError, "failed to load next workout")
+		h.domainError(c, err, "failed to load next workout")
 		return
 	}
 	response.Success(c, http.StatusOK, next)
