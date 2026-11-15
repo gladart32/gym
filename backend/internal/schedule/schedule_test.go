@@ -148,22 +148,33 @@ func do(t *testing.T, router *gin.Engine, method, path, bearer string, body any)
 // registerAndLogin creates a verified user and returns the access token.
 func registerAndLogin(t *testing.T, router *gin.Engine, a *app.App) string {
 	t.Helper()
-	return loginAs(t, router, a, fmt.Sprintf("sc%d@gym.test", time.Now().UnixNano()), false)
+	return loginAs(t, router, a, fmt.Sprintf("sc%d@gym.test", time.Now().UnixNano()), false, "")
+}
+
+// registerAndLoginTZ is registerAndLogin with an explicit IANA timezone
+// stored for the user (the schedule endpoints use it as "today").
+func registerAndLoginTZ(t *testing.T, router *gin.Engine, a *app.App, timezone string) string {
+	t.Helper()
+	return loginAs(t, router, a, fmt.Sprintf("sc%d@gym.test", time.Now().UnixNano()), false, timezone)
 }
 
 // promoteAndLogin registers an admin user and returns the access token.
 func promoteAndLogin(t *testing.T, router *gin.Engine, a *app.App) string {
 	t.Helper()
-	return loginAs(t, router, a, fmt.Sprintf("sa%d@gym.test", time.Now().UnixNano()), true)
+	return loginAs(t, router, a, fmt.Sprintf("sa%d@gym.test", time.Now().UnixNano()), true, "")
 }
 
-func loginAs(t *testing.T, router *gin.Engine, a *app.App, email string, admin bool) string {
+func loginAs(t *testing.T, router *gin.Engine, a *app.App, email string, admin bool, timezone string) string {
 	t.Helper()
 
-	rec, _ := do(t, router, http.MethodPost, "/api/v1/auth/register", "", map[string]string{
+	body := map[string]string{
 		"email":    email,
 		"password": testPassword,
-	})
+	}
+	if timezone != "" {
+		body["timezone"] = timezone
+	}
+	rec, _ := do(t, router, http.MethodPost, "/api/v1/auth/register", "", body)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("register: expected 201, got %d: %s", rec.Code, rec.Body.String())
 	}
@@ -680,9 +691,11 @@ func TestProgramUpdateDoesNotAffectStartedRules(t *testing.T) {
 
 func TestNextWorkout(t *testing.T) {
 	router, a := setup(t)
-	user1 := registerAndLogin(t, router, a)
-	user2 := registerAndLogin(t, router, a)
-	user3 := registerAndLogin(t, router, a)
+	// UTC keeps the test deterministic: the empty-from scan then starts
+	// at the UTC date like the expectations below.
+	user1 := registerAndLoginTZ(t, router, a, "UTC")
+	user2 := registerAndLoginTZ(t, router, a, "UTC")
+	user3 := registerAndLoginTZ(t, router, a, "UTC")
 
 	utcToday := time.Now().UTC().Format("2006-01-02")
 

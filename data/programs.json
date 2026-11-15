@@ -1,0 +1,1418 @@
+{
+  "$comment": "Готовые программы Gym для сидера backend/cmd/seed-programs (make seed-programs). Упражнение задаётся external_id из каталога (data/exercises-dataset, колонка exercises.external_id). Поля подхода должны соответствовать tracking_type упражнения: weight_reps — reps/weight_kg, reps — только reps (свой вес), time — duration_sec. weight_kg < 0 — помощь (гравитрон/поддержка). Вес гантелей — на одну руку. Повторения указаны как целевой максимум диапазона из источника программы.",
+  "programs": [
+    {
+      "name": "База со штангой 5×5 (StrongLifts 5×5)",
+      "level": "beginner",
+      "author_name": "Gym",
+      "description": "Классическая программа для новичков по мотивам StrongLifts 5×5: три тренировки в неделю (например пн/ср/пт) с днём отдыха между ними. Чередуйте день A и день B: неделя 1 — A–B–A, неделя 2 — B–A–B.\n\nВсе подходы рабочие — 5 повторений. Веса стартовые (для мужчины среднего роста); если даётся легко, на следующей тренировке поднимайте вес: +2,5 кг ко всем упражнениям, становая — +5 кг первые две недели. Отдых между подходами 90–180 сек; после неудачного подхода отдыхайте 3–5 мин. Перед рабочими подходами сделайте 2 разминочных подхода (пустой гриф и ~50% рабочего веса).\n\nЖим над головой указан сидя — можно выполнять и стоя.\n\n---\n\nClassic beginner program based on StrongLifts 5×5: three workouts per week (e.g. Mon/Wed/Fri) with a rest day in between. Alternate day A and day B: week 1 — A–B–A, week 2 — B–A–B.\n\nEvery working set is 5 reps. Starting weights are conservative (average male); add 2.5 kg to every lift each session (deadlift: +5 kg for the first two weeks). Rest 90–180 sec between sets, 3–5 min after a failed set. Warm up with 2 sets (empty bar and ~50% of the working weight) before the working sets.\n\nThe overhead press is listed seated — you may perform it standing as well.",
+      "days": [
+        {
+          "name": "День A — присед · жим лёжа · тяга в наклоне",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0025",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0027",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 30, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 30, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 30, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 30, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 30, "rest_sec": 120 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "День B — присед · жим над головой · становая",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0091",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 5, "weight_kg": 20, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0032",
+              "rest_after_sec": 180,
+              "sets": [
+                { "reps": 5, "weight_kg": 40, "rest_sec": 180 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Тренировка с весом тела (Bodyweight Basics)",
+      "level": "beginner",
+      "author_name": "Gym",
+      "description": "Три полнотелые тренировки в неделю (например пн/ср/пт) для дома или зала с минимальным инвентарём. Дни A/B/C выполняйте по кругу, между тренировками — день отдыха. Отдых между упражнениями 60–90 сек.\n\nПрогрессия: доходите до верхнего диапазона повторений во всех подходах, затем усложняйте вариант (например, переходите с поддержки в гравитроне к обычным подтягиваниям). В упражнениях с поддержкой (гравитрон, брусья с поддержкой) вес помощи указан со знаком «минус».\n\nБоковая планка выполняется на каждую сторону (указано общее время подхода).\n\n---\n\nThree full-body workouts per week (e.g. Mon/Wed/Fri) for home or a minimal-equipment gym. Rotate days A/B/C, resting a day between workouts. Rest 60–90 sec between exercises.\n\nProgression: reach the top of the rep range in every set, then move to a harder variation (e.g. from assisted pull-ups to regular ones). On assisted exercises the assistance weight is negative.\n\nThe side plank is performed on both sides (the set duration covers one side).",
+      "days": [
+        {
+          "name": "День A — приседания · отжимания · тяга",
+          "exercises": [
+            {
+              "external_id": "1685",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "rest_sec": 60 },
+                { "reps": 15, "rest_sec": 60 },
+                { "reps": 15, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "1311",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "rest_sec": 75 },
+                { "reps": 10, "rest_sec": 75 },
+                { "reps": 10, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0017",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 8, "weight_kg": -25, "rest_sec": 90 },
+                { "reps": 8, "weight_kg": -25, "rest_sec": 90 },
+                { "reps": 8, "weight_kg": -25, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "1460",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0705",
+              "rest_after_sec": 45,
+              "sets": [
+                { "duration_sec": 40, "rest_sec": 45 },
+                { "duration_sec": 40, "rest_sec": 45 },
+                { "duration_sec": 40, "rest_sec": 45 }
+              ]
+            },
+            {
+              "external_id": "1373",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 18, "rest_sec": 45 },
+                { "reps": 18, "rest_sec": 45 },
+                { "reps": 18, "rest_sec": 45 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "День B — брусья · присед · кор",
+          "exercises": [
+            {
+              "external_id": "2368",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "rest_sec": 75 },
+                { "reps": 10, "rest_sec": 75 },
+                { "reps": 10, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0009",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "weight_kg": -20, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": -20, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": -20, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0129",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "3561",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 14, "rest_sec": 60 },
+                { "reps": 14, "rest_sec": 60 },
+                { "reps": 14, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0865",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "rest_sec": 60 },
+                { "reps": 10, "rest_sec": 60 },
+                { "reps": 10, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "1387",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "rest_sec": 45 },
+                { "reps": 12, "rest_sec": 45 },
+                { "reps": 12, "rest_sec": 45 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "День C — всё тело (закрепление)",
+          "exercises": [
+            {
+              "external_id": "1685",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 18, "rest_sec": 60 },
+                { "reps": 18, "rest_sec": 60 },
+                { "reps": 18, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "1311",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0017",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 10, "weight_kg": -25, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": -25, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": -25, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "3561",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 16, "rest_sec": 60 },
+                { "reps": 16, "rest_sec": 60 },
+                { "reps": 16, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0705",
+              "rest_after_sec": 45,
+              "sets": [
+                { "duration_sec": 50, "rest_sec": 45 },
+                { "duration_sec": 50, "rest_sec": 45 },
+                { "duration_sec": 50, "rest_sec": 45 }
+              ]
+            },
+            {
+              "external_id": "0865",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "rest_sec": 60 },
+                { "reps": 12, "rest_sec": 60 },
+                { "reps": 12, "rest_sec": 60 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Верх/Низ 4 дня: сила и объём (Upper/Lower PHUL)",
+      "level": "intermediate",
+      "author_name": "Gym",
+      "description": "Четырёхдневный сплит «верх/низ» по мотивам PHUL: два силовых дня (3–5 повторений, большие веса) и два дня в объёмном стиле (8–15 повторений). Расписание: пн — верх (сила), вт — низ (сила), ср — отдых, чт — верх (объём), пт — низ (объём), выходные — отдых.\n\nПовторения указаны как целевой максимум диапазона: как только выполняете его во всех подходах — добавляйте вес (силовые дни +2,5–5 кг, объёмные +1,25–2,5 кг). Отдых: 2–4 мин в силовых днях, 45–90 сек в объёмных.\n\nВес гантелей указан на одну руку.\n\n---\n\nFour-day upper/lower split based on PHUL: two power days (3–5 reps, heavier loads) and two hypertrophy days (8–15 reps). Schedule: Mon — upper power, Tue — lower power, Wed — rest, Thu — upper hypertrophy, Fri — lower hypertrophy, weekend — rest.\n\nReps are listed as the top of the target range: once you hit it in every set, add weight (+2.5–5 kg on power days, +1.25–2.5 kg on hypertrophy days). Rest 2–4 min on power days, 45–90 sec on hypertrophy days.\n\nDumbbell weights are per hand.",
+      "days": [
+        {
+          "name": "Верх — сила (Upper Power)",
+          "exercises": [
+            {
+              "external_id": "0025",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 70, "rest_sec": 210 },
+                { "reps": 5, "weight_kg": 70, "rest_sec": 210 },
+                { "reps": 5, "weight_kg": 70, "rest_sec": 210 },
+                { "reps": 5, "weight_kg": 70, "rest_sec": 210 }
+              ]
+            },
+            {
+              "external_id": "0314",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 10, "weight_kg": 22, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 22, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 22, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 22, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0027",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 8, "weight_kg": 60, "rest_sec": 180 },
+                { "reps": 8, "weight_kg": 60, "rest_sec": 180 },
+                { "reps": 8, "weight_kg": 60, "rest_sec": 180 },
+                { "reps": 8, "weight_kg": 60, "rest_sec": 180 }
+              ]
+            },
+            {
+              "external_id": "0198",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 10, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 60, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0091",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0031",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 30, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0061",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 30, "rest_sec": 90 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Низ — сила (Lower Power)",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 85, "rest_sec": 210 },
+                { "reps": 5, "weight_kg": 85, "rest_sec": 210 },
+                { "reps": 5, "weight_kg": 85, "rest_sec": 210 },
+                { "reps": 5, "weight_kg": 85, "rest_sec": 210 }
+              ]
+            },
+            {
+              "external_id": "0032",
+              "rest_after_sec": 150,
+              "sets": [
+                { "reps": 5, "weight_kg": 105, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 105, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 105, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0739",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 10, "weight_kg": 130, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 130, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 130, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 130, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0586",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 10, "weight_kg": 35, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0594",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Верх — объём (Upper Hypertrophy)",
+          "exercises": [
+            {
+              "external_id": "0047",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 45, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0308",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 10, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 10, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 10, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 10, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0861",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0334",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0215",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0416",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 12, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0200",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Низ — объём (Lower Hypertrophy)",
+          "exercises": [
+            {
+              "external_id": "0042",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 45, "rest_sec": 150 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 150 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 150 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 150 }
+              ]
+            },
+            {
+              "external_id": "0085",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0336",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 14, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0585",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0599",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0594",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 18, "weight_kg": 40, "rest_sec": 45 },
+                { "reps": 18, "weight_kg": 40, "rest_sec": 45 },
+                { "reps": 18, "weight_kg": 40, "rest_sec": 45 },
+                { "reps": 18, "weight_kg": 40, "rest_sec": 45 },
+                { "reps": 18, "weight_kg": 40, "rest_sec": 45 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PPL 3 дня: жим · тяга · ноги (Push Pull Legs)",
+      "level": "intermediate",
+      "author_name": "Gym",
+      "description": "Сплит «жим/тяга/ноги» по мотивам PPL для новичков (metallicadpa, r/Fitness) в режиме трёх дней: например пн — жим, вт — отдых, ср — тяга, чт — отдых, пт — ноги; дальше круг начинается заново. Первое упражнение дня — тяжёлое, оно прогрессирует от тренировки к тренировке.\n\nПоследний подход тяжёлого упражнения — AMRAP: максимум чистых повторений с хорошей техникой. Прогрессия: +2,5 кг к жимам, тягам и приседу, +5 кг к становой — когда выполнен весь объём. После трёх неудачных попыток подряд сбросьте вес на 10% и начните заново.\n\nОтдых: 3–5 мин после тяжёлого упражнения, 1–3 мин в остальных; махи в стороны выполняйте «супер-сетами» с разгибаниями на трицепс (отдых 45 сек).\n\nВес гантелей указан на одну руку.\n\n---\n\nPush/Pull/Legs split based on the beginner PPL (metallicadpa, r/Fitness) run as three days: e.g. Mon — push, Tue — rest, Wed — pull, Thu — rest, Fri — legs; then repeat the rotation. The first exercise of each day is the heavy lift and progresses workout to workout.\n\nThe last set of the heavy lift is AMRAP: as many clean reps as possible. Progression: +2.5 kg on presses, rows and squats, +5 kg on deadlifts once the whole volume is done. After three failed sessions in a row, deload 10% and build back up.\n\nRest 3–5 min after the heavy lift, 1–3 min elsewhere; lateral raises are supersetted with triceps pushdowns (45 sec rest).\n\nDumbbell weights are per hand.",
+      "days": [
+        {
+          "name": "Жим (Push) — грудь · плечи · трицепс",
+          "exercises": [
+            {
+              "external_id": "0025",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 65, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 65, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 65, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 65, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 65, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0091",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 35, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 35, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 35, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0314",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 20, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 20, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 20, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0200",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0178",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 15, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 15, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 15, "rest_sec": 45 }
+              ]
+            },
+            {
+              "external_id": "0194",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 25, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0178",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 15, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 15, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 15, "rest_sec": 45 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Тяга (Pull) — спина · бицепс",
+          "exercises": [
+            {
+              "external_id": "0032",
+              "rest_after_sec": 150,
+              "sets": [
+                { "reps": 5, "weight_kg": 110, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0198",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0861",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 55, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0215",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0313",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0294",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 13, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 13, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 13, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 13, "rest_sec": 75 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Ноги (Legs) — квадрицепс · бицепс бедра · икры",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 85, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 85, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 85, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0085",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0739",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 130, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 130, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 130, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0586",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 40, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0605",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PPL 6 дней для продвинутых (PPL 6-Day Split)",
+      "level": "advanced",
+      "author_name": "Gym",
+      "description": "Шестидневная версия сплита «жим/тяга/ноги» (metallicadpa, r/Fitness): PPLR–PPL (день отдыха в середине) или PPL–PPLR. Дни A и B отличаются тяжёлым движением: в тяге A — становая, в тяге B — тяга в наклоне; в жиме A — жим лёжа, в жиме B — жим над головой. Каждое тяжёлое движение выполняется дважды в неделю.\n\nПоследний подход тяжёлого упражнения — AMRAP (максимум чистых повторений). Прогрессия: +2,5 кг к жимам/тягам/приседу, +5 кг к становой; после трёх неудач подряд — сброс 10%.\n\nОтдых: 3–5 мин на первом упражнении, 1–3 мин дальше; махи в стороны — супер-сеты с разгибаниями на трицепс. Высокий объём: следите за восстановлением (сон, питание).\n\nВес гантелей указан на одну руку; жим над головой сидя можно заменить на стоя.\n\n---\n\nSix-day version of the Push/Pull/Legs split (metallicadpa, r/Fitness): PPLR–PPL or PPL–PPLR. A and B days differ in the heavy lift: pull A — deadlift, pull B — bent-over row; push A — bench press, push B — overhead press. Each heavy lift is trained twice a week.\n\nThe last set of the heavy lift is AMRAP. Progression: +2.5 kg on presses/rows/squats, +5 kg on deadlifts; deload 10% after three failed sessions.\n\nRest 3–5 min on the first exercise, 1–3 min elsewhere; lateral raises are supersetted with triceps extensions. High volume — watch your recovery (sleep, food).\n\nDumbbell weights are per hand; the seated overhead press may be performed standing.",
+      "days": [
+        {
+          "name": "Тяга 1 (Pull A) — становая · спина · бицепс",
+          "exercises": [
+            {
+              "external_id": "0032",
+              "rest_after_sec": 150,
+              "sets": [
+                { "reps": 5, "weight_kg": 130, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0198",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0861",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0215",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0313",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0294",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Жим 1 (Push A) — жим лёжа · плечи · трицепс",
+          "exercises": [
+            {
+              "external_id": "0025",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 82.5, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 82.5, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 82.5, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 82.5, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 82.5, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0091",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 40, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0314",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0200",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0178",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 }
+              ]
+            },
+            {
+              "external_id": "0194",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0178",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Ноги 1 (Legs A)",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 100, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 100, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 100, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0085",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0739",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0586",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 45, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0605",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Тяга 2 (Pull B) — тяга в наклоне · спина · бицепс",
+          "exercises": [
+            {
+              "external_id": "0027",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 75, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 75, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 75, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 75, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 75, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0198",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0861",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0215",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 22, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0313",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0294",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 15, "rest_sec": 75 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Жим 2 (Push B) — жим над головой · грудь · трицепс",
+          "exercises": [
+            {
+              "external_id": "0091",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 50, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 50, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 50, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 50, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 50, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0025",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0314",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0200",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0178",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 }
+              ]
+            },
+            {
+              "external_id": "0194",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0178",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 },
+                { "reps": 20, "weight_kg": 17, "rest_sec": 45 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Ноги 2 (Legs B)",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 5, "weight_kg": 100, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 100, "rest_sec": 240 },
+                { "reps": 5, "weight_kg": 100, "rest_sec": 240 }
+              ]
+            },
+            {
+              "external_id": "0085",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0739",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0586",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 45, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0605",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 75, "rest_sec": 60 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Брой-сплит 5 дней (5-Day Bro Split)",
+      "level": "advanced",
+      "author_name": "Gym",
+      "description": "Классический пятидневный брой-сплит для опытных: каждая группа мышц прорабатывается раз в неделю — пн: грудь, вт: спина, ср: плечи, чт: руки, пт: ноги, выходные — отдых. В день 3–5 упражнений по 8–15 повторений, отдых 45–120 сек.\n\nПрогрессия: добавляйте вес, не выходя из диапазона повторений; объём высокий, поэтому раз в 4–6 недель снизьте рабочие веса на 20–30% на неделю для восстановления.\n\nВес гантелей указан на одну руку. Отжимания на брусьях и подтягивания — с собственным весом; при необходимости добавляйте отягощение.\n\n---\n\nClassic five-day bro split for experienced lifters: one muscle group per day — Mon: chest, Tue: back, Wed: shoulders, Thu: arms, Fri: legs, weekend rest. Each day has 3–5 exercises, 8–15 reps, 45–120 sec rest.\n\nProgression: add weight while staying in the rep range. Volume is high, so every 4–6 weeks take a deload week at 70–80% of your working weights.\n\nDumbbell weights are per hand. Dips and pull-ups are bodyweight; add weight when you outgrow them.",
+      "days": [
+        {
+          "name": "Грудь",
+          "exercises": [
+            {
+              "external_id": "0025",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 10, "weight_kg": 80, "rest_sec": 150 },
+                { "reps": 10, "weight_kg": 80, "rest_sec": 150 },
+                { "reps": 10, "weight_kg": 80, "rest_sec": 150 },
+                { "reps": 10, "weight_kg": 80, "rest_sec": 150 }
+              ]
+            },
+            {
+              "external_id": "0314",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 24, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0319",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 },
+                { "reps": 12, "weight_kg": 12, "rest_sec": 75 }
+              ]
+            },
+            {
+              "external_id": "0227",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 20, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0251",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Спина",
+          "exercises": [
+            {
+              "external_id": "0651",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 10, "rest_sec": 150 },
+                { "reps": 10, "rest_sec": 150 },
+                { "reps": 10, "rest_sec": 150 },
+                { "reps": 10, "rest_sec": 150 }
+              ]
+            },
+            {
+              "external_id": "0027",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 10, "weight_kg": 70, "rest_sec": 150 },
+                { "reps": 10, "weight_kg": 70, "rest_sec": 150 },
+                { "reps": 10, "weight_kg": 70, "rest_sec": 150 },
+                { "reps": 10, "weight_kg": 70, "rest_sec": 150 }
+              ]
+            },
+            {
+              "external_id": "0861",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0198",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 65, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 65, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0095",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 60, "rest_sec": 60 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Плечи",
+          "exercises": [
+            {
+              "external_id": "0405",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 10, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 20, "rest_sec": 120 },
+                { "reps": 10, "weight_kg": 20, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0334",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0383",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 8, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0215",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 },
+                { "reps": 20, "weight_kg": 20, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0406",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "weight_kg": 24, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 24, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 24, "rest_sec": 60 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Руки",
+          "exercises": [
+            {
+              "external_id": "0031",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 35, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 35, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0313",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 14, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 14, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0318",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 },
+                { "reps": 15, "weight_kg": 10, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0061",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0200",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 30, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0814",
+              "rest_after_sec": 75,
+              "sets": [
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 },
+                { "reps": 12, "rest_sec": 75 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Ноги",
+          "exercises": [
+            {
+              "external_id": "1436",
+              "rest_after_sec": 120,
+              "sets": [
+                { "reps": 10, "weight_kg": 90, "rest_sec": 180 },
+                { "reps": 10, "weight_kg": 90, "rest_sec": 180 },
+                { "reps": 10, "weight_kg": 90, "rest_sec": 180 },
+                { "reps": 10, "weight_kg": 90, "rest_sec": 180 }
+              ]
+            },
+            {
+              "external_id": "0085",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 },
+                { "reps": 12, "weight_kg": 80, "rest_sec": 120 }
+              ]
+            },
+            {
+              "external_id": "0739",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 160, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0336",
+              "rest_after_sec": 90,
+              "sets": [
+                { "reps": 12, "weight_kg": 16, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 16, "rest_sec": 90 },
+                { "reps": 12, "weight_kg": 16, "rest_sec": 90 }
+              ]
+            },
+            {
+              "external_id": "0586",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 40, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0585",
+              "rest_after_sec": 60,
+              "sets": [
+                { "reps": 12, "weight_kg": 45, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 60 },
+                { "reps": 12, "weight_kg": 45, "rest_sec": 60 }
+              ]
+            },
+            {
+              "external_id": "0605",
+              "rest_after_sec": 45,
+              "sets": [
+                { "reps": 15, "weight_kg": 75, "rest_sec": 45 },
+                { "reps": 15, "weight_kg": 75, "rest_sec": 45 },
+                { "reps": 15, "weight_kg": 75, "rest_sec": 45 },
+                { "reps": 15, "weight_kg": 75, "rest_sec": 45 },
+                { "reps": 15, "weight_kg": 75, "rest_sec": 45 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

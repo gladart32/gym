@@ -33,10 +33,7 @@ func (h *Profile) Get(c *gin.Context) {
 	userID := middleware.UserIDFrom(c)
 
 	p, err := h.svc.Get(c.Request.Context(), userID)
-	switch {
-	case errors.Is(err, sql.ErrNoRows):
-		p = nil // profile not filled yet — the client shows empty placeholders
-	case err != nil:
+	if err != nil {
 		h.log.ErrorContext(c.Request.Context(), "get profile",
 			"error", err, "request_id", middleware.RequestIDFrom(c))
 		response.Error(c, http.StatusInternalServerError, "failed to load profile")
@@ -65,6 +62,7 @@ type updateProfileRequest struct {
 	BirthDate      *string  `json:"birth_date"`
 	TargetWeightKg *float64 `json:"target_weight_kg"`
 	FitnessLevel   *string  `json:"fitness_level"`
+	Timezone       *string  `json:"timezone"` // IANA name; nil = keep the current one
 	TZOffset       *int     `json:"tz_offset"`
 }
 
@@ -93,12 +91,14 @@ func (h *Profile) Update(c *gin.Context) {
 		BirthDate:      birthDate,
 		TargetWeightKg: req.TargetWeightKg,
 		FitnessLevel:   req.FitnessLevel,
+		Timezone:       req.Timezone,
 	})
 	switch {
 	case errors.Is(err, profile.ErrInvalidGender),
 		errors.Is(err, profile.ErrInvalidFitnessLevel),
 		errors.Is(err, profile.ErrInvalidBirthDate),
-		errors.Is(err, profile.ErrInvalidTargetWeight):
+		errors.Is(err, profile.ErrInvalidTargetWeight),
+		errors.Is(err, profile.ErrInvalidTimezone):
 		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	case err != nil:

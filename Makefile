@@ -19,7 +19,7 @@ MYSQL_DATABASE ?= gym
 MYSQL_PORT ?= 3306
 
 .PHONY: up down start stop logs ps ui test-db-up test-db-down \
-        dataset-fetch seed-catalog media-sync \
+        dataset-fetch seed-catalog seed-programs media-sync \
         build run worker test vet tidy \
         migrate-up migrate-down migrate-status migrate-create \
         front-install front-dev front-build front-lint front-format
@@ -101,6 +101,15 @@ seed-catalog:
 	cd $(BACKEND) && go run ./cmd/importer \
 		-dsn '$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp(127.0.0.1:$(MYSQL_PORT))/$(MYSQL_DATABASE)?charset=utf8mb4&parseTime=true&loc=UTC' \
 		-dataset ../$(DATASET_DIR) \
+		$(SEED_ARGS)
+
+# Импорт готовых программ Gym из data/programs.json (владелец — Gym, опубликованы).
+# Флаги сидера: make seed-programs SEED_ARGS="-dry-run"  (или -replace)
+seed-programs:
+	@test -f $(DATA_DIR)/programs.json || { echo "манифест не найден: $(DATA_DIR)/programs.json"; exit 1; }
+	cd $(BACKEND) && go run ./cmd/seed-programs \
+		-dsn '$(MYSQL_USER):$(MYSQL_PASSWORD)@tcp(127.0.0.1:$(MYSQL_PORT))/$(MYSQL_DATABASE)?charset=utf8mb4&parseTime=true&loc=UTC' \
+		-manifest ../$(DATA_DIR)/programs.json \
 		$(SEED_ARGS)
 
 # Копирование GIF и миниатюр (~136 МБ) из data/exercises-dataset в backend/media —

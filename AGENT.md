@@ -37,6 +37,7 @@ make test-db-up    # тест-инфраструктура: mysql-test :3307 (gy
 make test
 make dataset-fetch  # клон датасета упражнений в data/exercises-dataset (GIF/миниатюры, ~136 МБ)
 make seed-catalog  # импорт каталога упражнений в MySQL (1324 шт., ru/en, пути медиа; импортёр backend/cmd/importer)
+make seed-programs  # импорт готовых программ Gym из data/programs.json (6 программ 3 уровней; сидер backend/cmd/seed-programs)
 make media-sync    # копирование GIF/миниатюр (~136 МБ) из data/exercises-dataset в backend/media
 make front-install / front-dev / front-build / front-lint / front-format
 ```

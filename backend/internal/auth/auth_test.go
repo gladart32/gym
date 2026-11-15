@@ -424,3 +424,53 @@ func TestWebLoginSetsRefreshCookie(t *testing.T) {
 		t.Fatalf("refresh by cookie: expected 200, got %d: %s", rec2.Code, rec2.Body.String())
 	}
 }
+
+// Register may carry the browser timezone (IANA): it lands in
+// users.timezone; invalid names are rejected with 400.
+func TestRegisterTimezone(t *testing.T) {
+	router, a := setup(t)
+
+	email := uniqueEmail()
+	rec, env := doJSON(t, router, http.MethodPost, "/api/v1/auth/register", "", "", map[string]any{
+		"email":    email,
+		"password": "password-123",
+		"name":     "TZ User",
+		"timezone": "Asia/Novosibirsk",
+	})
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("register: expected 201, got %d: %s", rec.Code, env.Message)
+	}
+	var tz string
+	if err := a.DB.Get(&tz, `SELECT timezone FROM users WHERE email = ?`, email); err != nil {
+		t.Fatalf("select timezone: %v", err)
+	}
+	if tz != "Asia/Novosibirsk" {
+		t.Fatalf("expected Asia/Novosibirsk, got %q", tz)
+	}
+
+	// No timezone: the column default stays.
+	email2 := uniqueEmail()
+	rec, _ = doJSON(t, router, http.MethodPost, "/api/v1/auth/register", "", "", map[string]any{
+		"email":    email2,
+		"password": "password-123",
+	})
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("register without tz: expected 201, got %d", rec.Code)
+	}
+	if err := a.DB.Get(&tz, `SELECT timezone FROM users WHERE email = ?`, email2); err != nil {
+		t.Fatalf("select default timezone: %v", err)
+	}
+	if tz != "Europe/Moscow" {
+		t.Fatalf("expected column default Europe/Moscow, got %q", tz)
+	}
+
+	// Invalid IANA name -> 400.
+	rec, _ = doJSON(t, router, http.MethodPost, "/api/v1/auth/register", "", "", map[string]any{
+		"email":    uniqueEmail(),
+		"password": "password-123",
+		"timezone": "Mars/Olympus",
+	})
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("invalid timezone: expected 400, got %d", rec.Code)
+	}
+}

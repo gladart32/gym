@@ -12,6 +12,7 @@ import (
 
 	"github.com/gladart32/gym/internal/auth"
 	"github.com/gladart32/gym/internal/config"
+	"github.com/gladart32/gym/internal/profile"
 	"github.com/gladart32/gym/internal/tasks"
 	"github.com/gladart32/gym/internal/transport/http/middleware"
 	"github.com/gladart32/gym/internal/transport/http/response"
@@ -36,6 +37,7 @@ type registerRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 	Name     string `json:"name"`
+	Timezone string `json:"timezone"` // IANA name from the browser, optional
 }
 
 // Register handles POST /api/v1/auth/register.
@@ -46,10 +48,11 @@ func (h *Auth) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.svc.Register(c.Request.Context(), req.Email, req.Password, req.Name)
+	user, err := h.svc.Register(c.Request.Context(), req.Email, req.Password, req.Name, req.Timezone)
 	switch {
-	case errors.Is(err, auth.ErrInvalidPassword):
-		response.Error(c, http.StatusBadRequest, auth.ErrInvalidPassword.Error())
+	case errors.Is(err, auth.ErrInvalidPassword),
+		errors.Is(err, profile.ErrInvalidTimezone):
+		response.Error(c, http.StatusBadRequest, err.Error())
 		return
 	case errors.Is(err, auth.ErrEmailTaken):
 		response.Error(c, http.StatusConflict, auth.ErrEmailTaken.Error())

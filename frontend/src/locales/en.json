@@ -310,6 +310,11 @@
     "theme_light": "Light",
     "theme_dark": "Dark",
     "language": "Language",
+    "timezone": "Time zone",
+    "timezoneHint": "Affects the “today” detection in the calendar and future workout reminders",
+    "detectTimezone": "Detect automatically",
+    "timezoneDetectFailed": "Failed to detect the browser time zone",
+    "timezoneSaved": "Time zone saved",
     "otherLater": "More settings coming later"
   },
   "notFound": {

@@ -51,6 +51,25 @@ func today() time.Time {
 	return dateOnly(time.Now().UTC())
 }
 
+// todayIn returns today's date in the given location (its midnight).
+func todayIn(loc *time.Location) time.Time {
+	return dateOnly(time.Now().In(loc))
+}
+
+// userLocation returns the user's stored IANA timezone (users.timezone);
+// on any failure it falls back to UTC.
+func (s *Service) userLocation(ctx context.Context, userID uint32) (*time.Location, error) {
+	var tz string
+	if err := s.db.GetContext(ctx, &tz, `SELECT timezone FROM users WHERE id = ?`, userID); err != nil {
+		return nil, err
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil || tz == "" {
+		return time.UTC, nil
+	}
+	return loc, nil
+}
+
 // mondayOf returns the Monday of the week containing t (Monday-based week).
 func mondayOf(t time.Time) time.Time {
 	offset := (int(t.Weekday()) + 6) % 7 // Mon -> 0 .. Sun -> 6
@@ -135,13 +154,21 @@ func entriesFor(ups []UserProgram, d time.Time) []PlanEntry {
 // Week returns the plan for the Monday-based week containing date
 // (empty date = current week). The plan merges all active user programs.
 func (s *Service) Week(ctx context.Context, userID uint32, date string) (*WeekPlan, error) {
-	anchor := time.Now().UTC()
+	anchor := todayIn(time.UTC)
 	if date != "" {
 		var err error
 		anchor, err = time.Parse("2006-01-02", date)
 		if err != nil {
 			return nil, ErrInvalidDate
 		}
+	} else {
+		// No explicit date: "today" is the user's local date, not the
+		// server's UTC one.
+		loc, err := s.userLocation(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		anchor = todayIn(loc)
 	}
 	monday := mondayOf(anchor)
 
@@ -183,15 +210,21 @@ type NextWorkout struct {
 // Next returns the closest scheduled workout of the user's active programs.
 // The scan starts at from (inclusive; YYYY-MM-DD; the client passes its
 // local date so the server never guesses the user's "today") and covers
-// nextWindowDays days. Empty from = UTC today.
+// nextWindowDays days. Empty from = the user's local today.
 func (s *Service) Next(ctx context.Context, userID uint32, from string) (*NextWorkout, error) {
-	start := today()
+	start := todayIn(time.UTC)
 	if from != "" {
 		parsed, err := time.Parse("2006-01-02", from)
 		if err != nil {
 			return nil, ErrInvalidDate
 		}
 		start = dateOnly(parsed)
+	} else {
+		loc, err := s.userLocation(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		start = todayIn(loc)
 	}
 
 	ups, err := s.loadUserPrograms(ctx, userID)

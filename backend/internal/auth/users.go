@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+
+	"github.com/gladart32/gym/internal/profile"
 )
 
 var (
@@ -43,32 +45,56 @@ func normalizeEmail(email string) string {
 }
 
 // Register creates an unverified user and returns its brief.
-func (s *Service) Register(ctx context.Context, email, password, name string) (*UserBrief, error) {
+// timezone (optional, IANA name) is stored for schedule reminders; an empty
+// value keeps the column default.
+func (s *Service) Register(ctx context.Context, email, password, name, timezone string) (*UserBrief, error) {
 	email = normalizeEmail(email)
 	if len(password) < 8 || len(password) > 72 {
 		return nil, ErrInvalidPassword
 	}
 	name = truncate(strings.TrimSpace(name), maxUserName)
 
+	loc, err := profile.NormalizeTimezone(timezone)
+	if err != nil {
+		return nil, err
+	}
+
 	hash, err := HashPassword(password)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := s.db.ExecContext(ctx,
-		`INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)`, email, hash, name)
-	if err != nil {
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
-			return nil, ErrEmailTaken
+	if loc == nil {
+		res, err := s.db.ExecContext(ctx,
+			`INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)`, email, hash, name)
+		if err != nil {
+			return nil, registerError(err)
 		}
-		return nil, err
+		return insertUserBrief(res, email)
 	}
+
+	res, err := s.db.ExecContext(ctx,
+		`INSERT INTO users (email, password_hash, name, timezone) VALUES (?, ?, ?, ?)`,
+		email, hash, name, profile.TimezoneName(loc))
+	if err != nil {
+		return nil, registerError(err)
+	}
+	return insertUserBrief(res, email)
+}
+
+func registerError(err error) error {
+	var mysqlErr *mysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		return ErrEmailTaken
+	}
+	return err
+}
+
+func insertUserBrief(res sql.Result, email string) (*UserBrief, error) {
 	id, err := res.LastInsertId()
 	if err != nil {
 		return nil, err
 	}
-
 	return &UserBrief{ID: uint32(id), Email: email, Role: RoleUser}, nil
 }
 

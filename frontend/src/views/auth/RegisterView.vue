@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input, PasswordInput } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { browserTimezone } from '@/utils/date'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -26,7 +27,12 @@ async function onSubmit() {
   }
   loading.value = true
   try {
-    await authApi.register({ email: email.value, password: password.value, name: name.value })
+    await authApi.register({
+      email: email.value,
+      password: password.value,
+      name: name.value,
+      timezone: browserTimezone(),
+    })
     toast.success(t('auth.registerSuccess'))
     router.push('/auth/login')
   } catch (error) {
