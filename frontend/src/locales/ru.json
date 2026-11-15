@@ -25,6 +25,14 @@
     "inDevelopment": "Раздел в разработке"
   },
   "dashboard": {
+    "nextWorkout": "Следующая тренировка",
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "inDays": "Через {n} дн.",
+    "toCalendar": "Открыть календарь",
+    "noWorkoutsTitle": "Тренировок нет",
+    "noWorkoutsHint": "Начните программу — и ближайшая тренировка появится здесь",
+    "goToWorkouts": "К тренировкам",
     "workouts": "Тренировки",
     "workoutsHint": "за последние 7 дней",
     "exercises": "Упражнения",

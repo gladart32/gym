@@ -15,4 +15,6 @@ export const scheduleApi = {
   deactivate: (userProgramId) => http.delete(`/schedule/programs/${userProgramId}`, authed).then(data),
   // План на неделю (пн–вс), содержащую дату; без даты — текущая
   week: (date) => http.get('/schedule/week', { ...authed, params: date ? { date } : {} }).then(data),
+  // Ближайшая тренировка от сегодняшней даты включительно
+  next: () => http.get('/schedule/next', authed).then(data),
 }

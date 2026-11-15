@@ -25,6 +25,14 @@
     "inDevelopment": "Section under development"
   },
   "dashboard": {
+    "nextWorkout": "Next workout",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "inDays": "In {n} days",
+    "toCalendar": "Open calendar",
+    "noWorkoutsTitle": "No workouts",
+    "noWorkoutsHint": "Start a program — your next workout will appear here",
+    "goToWorkouts": "Go to workouts",
     "workouts": "Workouts",
     "workoutsHint": "in the last 7 days",
     "exercises": "Exercises",

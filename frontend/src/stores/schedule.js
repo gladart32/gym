@@ -21,6 +21,10 @@ const useScheduleStore = defineStore('schedule', {
     week: null,
     anchorDate: '',
     weekLoading: false,
+
+    // ближайшая тренировка (GET /schedule/next)
+    nextWorkout: null,
+    nextLoading: false,
   }),
 
   getters: {
@@ -54,8 +58,20 @@ const useScheduleStore = defineStore('schedule', {
       }
     },
 
+    async loadNext() {
+      if (!useAuthStore().isAuthenticated) return
+      this.nextLoading = true
+      try {
+        this.nextWorkout = await scheduleApi.next()
+      } catch (error) {
+        toast.error(error.message)
+      } finally {
+        this.nextLoading = false
+      }
+    },
+
     async refresh() {
-      return Promise.all([this.load(), this.loadWeek(this.anchorDate)])
+      return Promise.all([this.load(), this.loadWeek(this.anchorDate), this.loadNext()])
     },
 
     // Выбор программы (старт с указанной даты) — после перезагружаем расписание

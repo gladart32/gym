@@ -48,7 +48,7 @@ func dateOnly(t time.Time) time.Time {
 
 // today returns today's date (UTC midnight).
 func today() time.Time {
-	return dateOnly(time.Now())
+	return dateOnly(time.Now().UTC())
 }
 
 // mondayOf returns the Monday of the week containing t (Monday-based week).
@@ -95,10 +95,47 @@ func max8(a, b uint8) uint8 {
 	return b
 }
 
+// sortEntries orders the day's entries by day position, then by name.
+func sortEntries(entries []PlanEntry) {
+	sort.SliceStable(entries, func(x, y int) bool {
+		if entries[x].Position != entries[y].Position {
+			return entries[x].Position < entries[y].Position
+		}
+		return entries[x].DayName < entries[y].DayName
+	})
+}
+
+// entriesFor collects the entries of all active user programs on date d.
+func entriesFor(ups []UserProgram, d time.Time) []PlanEntry {
+	entries := []PlanEntry{}
+	for _, up := range ups {
+		start, err := time.Parse("2006-01-02", up.StartDate)
+		if err != nil {
+			continue // corrupted anchor: skip the program, do not break the plan
+		}
+		start = dateOnly(start)
+		for _, rule := range up.Rules {
+			if !rule.IsEnabled || !ruleMatches(rule, start, dateOnly(d)) {
+				continue
+			}
+			entries = append(entries, PlanEntry{
+				UserProgramID: up.ID,
+				ProgramID:     up.ProgramID,
+				ProgramName:   up.ProgramName,
+				ProgramDayID:  rule.ProgramDayID,
+				DayName:       rule.DayName,
+				Position:      rule.DayPosition,
+			})
+		}
+	}
+	sortEntries(entries)
+	return entries
+}
+
 // Week returns the plan for the Monday-based week containing date
 // (empty date = current week). The plan merges all active user programs.
 func (s *Service) Week(ctx context.Context, userID uint32, date string) (*WeekPlan, error) {
-	anchor := time.Now()
+	anchor := time.Now().UTC()
 	if date != "" {
 		var err error
 		anchor, err = time.Parse("2006-01-02", date)
@@ -119,46 +156,8 @@ func (s *Service) Week(ctx context.Context, userID uint32, date string) (*WeekPl
 		days[i] = PlanDay{
 			Date:    d.Format("2006-01-02"),
 			Weekday: weekdayCodes[d.Weekday()],
-			Entries: []PlanEntry{},
+			Entries: entriesFor(ups, d),
 		}
-	}
-
-	for _, up := range ups {
-		start, err := time.Parse("2006-01-02", up.StartDate)
-		if err != nil {
-			continue // corrupted anchor: skip the program, do not break the plan
-		}
-		start = dateOnly(start)
-		for i := range days {
-			dayDate, err := time.Parse("2006-01-02", days[i].Date)
-			if err != nil {
-				continue
-			}
-			for _, rule := range up.Rules {
-				if !rule.IsEnabled || !ruleMatches(rule, start, dateOnly(dayDate)) {
-					continue
-				}
-				days[i].Entries = append(days[i].Entries, PlanEntry{
-					UserProgramID: up.ID,
-					ProgramID:     up.ProgramID,
-					ProgramName:   up.ProgramName,
-					ProgramDayID:  rule.ProgramDayID,
-					DayName:       rule.DayName,
-					Position:      rule.DayPosition,
-				})
-			}
-		}
-	}
-
-	for i := range days {
-		entries := days[i].Entries
-		sort.SliceStable(entries, func(x, y int) bool {
-			if entries[x].Position != entries[y].Position {
-				return entries[x].Position < entries[y].Position
-			}
-			return entries[x].DayName < entries[y].DayName
-		})
-		days[i].Entries = entries
 	}
 
 	return &WeekPlan{
@@ -166,4 +165,42 @@ func (s *Service) Week(ctx context.Context, userID uint32, date string) (*WeekPl
 		EndDate:   monday.AddDate(0, 0, 6).Format("2006-01-02"),
 		Days:      days,
 	}, nil
+}
+
+// nextWindowDays limits how far ahead the next-workout lookup scans.
+const nextWindowDays = 90
+
+// NextWorkout is the closest scheduled workout on or after today.
+// Date/Weekday are empty and DaysUntil is -1 when nothing is scheduled
+// within the look-ahead window.
+type NextWorkout struct {
+	Date      string      `json:"date"`       // YYYY-MM-DD
+	Weekday   string      `json:"weekday"`    // mon..sun
+	DaysUntil int         `json:"days_until"` // 0 = today, -1 = none
+	Entries   []PlanEntry `json:"entries"`
+}
+
+// Next returns the closest scheduled workout of the user's active programs,
+// scanning from today (inclusive) for the nextWindowDays days.
+func (s *Service) Next(ctx context.Context, userID uint32) (*NextWorkout, error) {
+	ups, err := s.loadUserPrograms(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	from := today()
+	for i := 0; i < nextWindowDays; i++ {
+		d := from.AddDate(0, 0, i)
+		entries := entriesFor(ups, d)
+		if len(entries) == 0 {
+			continue
+		}
+		return &NextWorkout{
+			Date:      d.Format("2006-01-02"),
+			Weekday:   weekdayCodes[d.Weekday()],
+			DaysUntil: i,
+			Entries:   entries,
+		}, nil
+	}
+	return &NextWorkout{Date: "", Weekday: "", DaysUntil: -1, Entries: []PlanEntry{}}, nil
 }

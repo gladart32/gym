@@ -68,6 +68,13 @@ type weekPlanJSON struct {
 	Days      []planDayJSON `json:"days"`
 }
 
+type nextJSON struct {
+	Date      string          `json:"date"`
+	Weekday   string          `json:"weekday"`
+	DaysUntil int             `json:"days_until"`
+	Entries   []planEntryJSON `json:"entries"`
+}
+
 const testPassword = "test-pass-123"
 
 func setup(t *testing.T) (*gin.Engine, *app.App) {
@@ -668,6 +675,69 @@ func TestProgramUpdateDoesNotAffectStartedRules(t *testing.T) {
 	}
 	if len(entriesOn(plan, "2026-11-07")) != 0 {
 		t.Fatalf("program edit must not leak into the started schedule: %+v", plan)
+	}
+}
+
+func TestNextWorkout(t *testing.T) {
+	router, a := setup(t)
+	user1 := registerAndLogin(t, router, a)
+	user2 := registerAndLogin(t, router, a)
+	user3 := registerAndLogin(t, router, a)
+
+	utcToday := time.Now().UTC().Format("2006-01-02")
+
+	getNext := func(t *testing.T, bearer string) (int, apiEnvelope, nextJSON) {
+		t.Helper()
+		rec, env := do(t, router, http.MethodGet, "/api/v1/schedule/next", bearer, nil)
+		var out nextJSON
+		if env.Data != nil {
+			if err := json.Unmarshal(env.Data, &out); err != nil {
+				t.Fatalf("unmarshal next: %v", err)
+			}
+		}
+		return rec.Code, env, out
+	}
+
+	// No active programs: the empty marker.
+	_, _, next := getNext(t, user3)
+	if next.Date != "" || next.DaysUntil != -1 || len(next.Entries) != 0 {
+		t.Fatalf("empty schedule must yield the none marker: %+v", next)
+	}
+
+	// Daily program started today: the next workout is today.
+	programID := createProgramWithDays(t, router, user1, "Ежедневка", []map[string]any{
+		day("Каждый день", daily(1)),
+	})
+	if code, env, _ := selectProgram(t, router, user1, programID, utcToday); code != http.StatusOK {
+		t.Fatalf("select: %d %s", code, env.Message)
+	}
+	_, _, next = getNext(t, user1)
+	if next.Date != utcToday || next.DaysUntil != 0 || len(next.Entries) != 1 || next.Entries[0].DayName != "Каждый день" {
+		t.Fatalf("expected today's workout, got: %+v", next)
+	}
+
+	// Weekly program on the weekday of today+3: days_until = 3.
+	in3 := time.Now().UTC().AddDate(0, 0, 3)
+	in3Date := in3.Format("2006-01-02")
+	code3 := map[time.Weekday]string{
+		time.Monday: "mon", time.Tuesday: "tue", time.Wednesday: "wed", time.Thursday: "thu",
+		time.Friday: "fri", time.Saturday: "sat", time.Sunday: "sun",
+	}[in3.Weekday()]
+	program2 := createProgramWithDays(t, router, user2, "Три раза", []map[string]any{
+		day("Скоро", weekly(1, code3)),
+		day("Мимо", once("2020-01-01")), // в прошлом: не влияет
+	})
+	if code, env, _ := selectProgram(t, router, user2, program2, utcToday); code != http.StatusOK {
+		t.Fatalf("select: %d %s", code, env.Message)
+	}
+	_, _, next = getNext(t, user2)
+	if next.Date != in3Date || next.DaysUntil != 3 || len(next.Entries) != 1 || next.Entries[0].DayName != "Скоро" {
+		t.Fatalf("expected workout in 3 days (%s), got: %+v", in3Date, next)
+	}
+
+	// Foreign user and unauthenticated requests.
+	if c := doCode(t, router, http.MethodGet, "/api/v1/schedule/next", "", nil); c != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated next: expected 401, got %d", c)
 	}
 }
 

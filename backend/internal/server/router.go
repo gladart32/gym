@@ -92,6 +92,7 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 		{
 			scheduleGroup.GET("", scheduleH.Get)
 			scheduleGroup.GET("/week", scheduleH.Week)
+			scheduleGroup.GET("/next", scheduleH.Next)
 			scheduleGroup.PUT("/rules/:id", scheduleH.UpdateRule)
 			scheduleGroup.DELETE("/rules/:id", scheduleH.DeleteRule)
 			scheduleGroup.DELETE("/programs/:id", scheduleH.Deactivate)
