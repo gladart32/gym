@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { CalendarCheck, Dumbbell } from '@lucide/vue'
+import { CalendarCheck, Dumbbell, Play } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import useScheduleStore from '@/stores/schedule'
+import useWorkoutSessionStore from '@/stores/workoutSession'
 import { todayStr } from '@/utils/date'
 
 const { t, locale } = useI18n()
 const router = useRouter()
 const scheduleStore = useScheduleStore()
+const sessionStore = useWorkoutSessionStore()
 const { nextWorkout, nextLoading } = storeToRefs(scheduleStore)
 
 const stats = computed(() => [
@@ -43,8 +45,26 @@ const dateLabel = computed(() => {
   })
 })
 
+// «Начать тренировку» из карточки дня: старт сессии (или возврат к активной)
+async function startSession(entry) {
+  if (sessionStore.hasActive) {
+    router.push({ name: 'workout-session' })
+    return
+  }
+  const ok = await sessionStore.startFromEntry(entry.user_program_id, entry.program_day_id)
+  if (ok || sessionStore.hasActive) {
+    router.push({ name: 'workout-session' })
+  }
+}
+
+async function resumeSession() {
+  router.push({ name: 'workout-session' })
+}
+
 onMounted(() => {
   scheduleStore.loadNext(todayStr())
+  // если есть незавершённая тренировка — показываем баннер возврата
+  sessionStore.resume()
 })
 </script>
 
@@ -53,6 +73,17 @@ onMounted(() => {
     <h1 class="text-3xl font-bold">{{ $t('nav.dashboard') }}</h1>
 
     <Skeleton v-if="nextLoading && !nextWorkout" class="h-40 w-full" />
+
+    <!-- Незавершённая тренировка: баннер возврата -->
+    <Card v-else-if="sessionStore.hasActive" class="border-primary">
+      <CardContent class="flex items-center gap-3 py-4">
+        <Play class="text-primary size-5 shrink-0" />
+        <p class="flex-1 text-sm font-medium">{{ $t('session.activeBanner') }}</p>
+        <Button size="sm" @click="resumeSession">
+          {{ $t('session.goToActive') }}
+        </Button>
+      </CardContent>
+    </Card>
 
     <Card v-else-if="nextWorkout && nextWorkout.entries.length > 0">
       <CardHeader class="flex flex-row items-start justify-between space-y-0">
@@ -69,10 +100,16 @@ onMounted(() => {
         <div
           v-for="entry in nextWorkout.entries"
           :key="`${entry.user_program_id}-${entry.program_day_id}`"
-          class="bg-primary/10 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md border p-2.5"
+          class="bg-primary/10 flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md border p-2.5"
         >
-          <span class="font-medium">{{ entry.day_name }}</span>
-          <span class="text-muted-foreground text-sm">{{ entry.program_name }}</span>
+          <div class="flex min-w-0 flex-1 flex-col gap-y-0.5">
+            <span class="font-medium">{{ entry.day_name }}</span>
+            <span class="text-muted-foreground text-sm">{{ entry.program_name }}</span>
+          </div>
+          <Button size="sm" :disabled="sessionStore.loading" @click="startSession(entry)">
+            <Play />
+            {{ $t('session.start') }}
+          </Button>
         </div>
         <Button
           variant="ghost"

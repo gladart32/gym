@@ -22,7 +22,10 @@
     "register": "Sign up",
     "loading": "Loading…",
     "save": "Save",
-    "inDevelopment": "Section under development"
+    "inDevelopment": "Section under development",
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "dashboard": {
     "nextWorkout": "Next workout",
@@ -353,5 +356,93 @@
     "roleUser": "User",
     "roleAdmin": "Administrator",
     "toastPasswordsMismatch": "Passwords do not match"
+  },
+  "session": {
+    "title": "Workout",
+    "start": "Start",
+    "resume": "Return to workout",
+    "activeBanner": "Your workout is in progress",
+    "goToActive": "Continue",
+    "mode": {
+      "label": "Mode",
+      "manual": "Manual",
+      "auto": "Auto",
+      "manualHint": "You start each set",
+      "autoHint": "Timers run on their own"
+    },
+    "elapsed": "Workout time",
+    "exercise": {
+      "of": "Exercise {current} of {total}",
+      "skipped": "Skipped",
+      "replaced": "Replaced",
+      "restAfter": "Rest after exercise: {sec} sec",
+      "skip": "Skip",
+      "replace": "Replace",
+      "add": "Add exercise",
+      "addSet": "Add set",
+      "added": "Added on the fly"
+    },
+    "set": {
+      "title": "Set {n}",
+      "start": "Start set",
+      "finish": "Finish set",
+      "completed": "Done",
+      "plan": "Plan",
+      "fact": "Actual",
+      "reps": "Reps",
+      "weight": "Weight, kg",
+      "duration": "Time, sec",
+      "distance": "Distance, m",
+      "rest": "Rest, sec",
+      "countdown": "Left",
+      "empty": "No sets"
+    },
+    "rest": {
+      "title": "Rest",
+      "skip": "Skip rest",
+      "extend": "+20 sec",
+      "nextSet": "Up next: set {n}",
+      "nextExercise": "Up next: {name}"
+    },
+    "workout": {
+      "exit": "Exit",
+      "complete": "Finish",
+      "cancel": "Cancel workout",
+      "completeConfirm": "Finish the workout and save the result?",
+      "cancelConfirm": "Cancel the workout? The logged data will stay in history with the cancelled status."
+    },
+    "summary": {
+      "title": "Workout finished",
+      "subtitle": "All sets are marked",
+      "duration": "Duration",
+      "setsDone": "Sets completed",
+      "volume": "Volume",
+      "save": "Save",
+      "saveAndExit": "Save and exit",
+      "cancelWorkout": "Cancel workout",
+      "empty": "No completed sets in this workout yet"
+    },
+    "list": {
+      "title": "Exercises",
+      "setOf": "Set {n}",
+      "plannedShort": "{reps}×{weight} kg",
+      "plannedRepsShort": "{reps} reps",
+      "plannedTimeShort": "{sec} sec",
+      "plannedDistanceShort": "{m} m",
+      "addSetHere": "+ set"
+    },
+    "toast": {
+      "exerciseAdded": "Exercise added",
+      "setAdded": "Set added",
+      "exerciseReplaced": "Exercise replaced",
+      "exerciseSkipped": "Exercise skipped",
+      "saved": "Workout saved",
+      "cancelled": "Workout cancelled",
+      "notFound": "No active workout found"
+    },
+    "units": {
+      "secShort": "sec",
+      "mShort": "m"
+    }
   }
 }

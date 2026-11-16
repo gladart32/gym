@@ -12,9 +12,10 @@ import (
 	"github.com/gladart32/gym/internal/schedule"
 	"github.com/gladart32/gym/internal/transport/http/handler"
 	"github.com/gladart32/gym/internal/transport/http/middleware"
+	"github.com/gladart32/gym/internal/workouts"
 )
 
-func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service, exercisesH *handler.Exercises, programsH *handler.Programs, programsService *programs.Service, scheduleH *handler.Schedule, scheduleService *schedule.Service) *gin.Engine {
+func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service, exercisesH *handler.Exercises, programsH *handler.Programs, programsService *programs.Service, scheduleH *handler.Schedule, scheduleService *schedule.Service, workoutsH *handler.Workouts, workoutsService *workouts.Service) *gin.Engine {
 	if cfg.Env == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -96,6 +97,18 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 			scheduleGroup.PUT("/rules/:id", scheduleH.UpdateRule)
 			scheduleGroup.DELETE("/rules/:id", scheduleH.DeleteRule)
 			scheduleGroup.DELETE("/programs/:id", scheduleH.Deactivate)
+		}
+
+		workoutsGroup := api.Group("/workouts", middleware.Auth(authService))
+		{
+			workoutsGroup.POST("/start", workoutsH.Start)
+			workoutsGroup.GET("/active", workoutsH.Active)
+			workoutsGroup.POST("/complete", workoutsH.Complete)
+			workoutsGroup.POST("/cancel", workoutsH.Cancel)
+			workoutsGroup.PATCH("/sets/:id", workoutsH.UpdateSet)
+			workoutsGroup.POST("/exercises", workoutsH.AddExercise)
+			workoutsGroup.PATCH("/exercises/:id", workoutsH.UpdateExercise)
+			workoutsGroup.POST("/exercises/:id/sets", workoutsH.AddSet)
 		}
 	}
 

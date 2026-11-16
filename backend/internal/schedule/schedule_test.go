@@ -94,6 +94,8 @@ func setup(t *testing.T) (*gin.Engine, *app.App) {
 		a.Programs,
 		handler.NewSchedule(a.Log, a.Schedule),
 		a.Schedule,
+		handler.NewWorkouts(a.Log, a.Workouts),
+		a.Workouts,
 	)
 
 	clean(t, a)

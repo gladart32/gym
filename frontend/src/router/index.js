@@ -86,6 +86,19 @@ const router = createRouter({
       ],
     },
     {
+      path: '/workout-session',
+      component: () => import('@/layouts/SessionLayout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'workout-session',
+          component: () => import('@/views/WorkoutSessionView.vue'),
+          meta: { title: 'session.title' },
+        },
+      ],
+    },
+    {
       path: '/auth',
       component: () => import('@/layouts/AuthLayout.vue'),
       redirect: '/auth/login',

@@ -22,7 +22,10 @@
     "register": "Регистрация",
     "loading": "Загрузка…",
     "save": "Сохранить",
-    "inDevelopment": "Раздел в разработке"
+    "inDevelopment": "Раздел в разработке",
+    "back": "Назад",
+    "cancel": "Отмена",
+    "close": "Закрыть"
   },
   "dashboard": {
     "nextWorkout": "Следующая тренировка",
@@ -353,5 +356,93 @@
     "roleUser": "Пользователь",
     "roleAdmin": "Администратор",
     "toastPasswordsMismatch": "Пароли не совпадают"
+  },
+  "session": {
+    "title": "Тренировка",
+    "start": "Начать",
+    "resume": "Вернуться к тренировке",
+    "activeBanner": "У вас идёт тренировка",
+    "goToActive": "Продолжить",
+    "mode": {
+      "label": "Режим",
+      "manual": "Ручной",
+      "auto": "Авто",
+      "manualHint": "Подходы запускаете вы",
+      "autoHint": "Таймеры идут сами"
+    },
+    "elapsed": "Время тренировки",
+    "exercise": {
+      "of": "Упражнение {current} из {total}",
+      "skipped": "Пропущено",
+      "replaced": "Заменено",
+      "restAfter": "Отдых после упражнения: {sec} сек",
+      "skip": "Пропустить",
+      "replace": "Заменить",
+      "add": "Добавить упражнение",
+      "addSet": "Добавить подход",
+      "added": "Добавлено по ходу"
+    },
+    "set": {
+      "title": "Подход {n}",
+      "start": "Начать подход",
+      "finish": "Закончить подход",
+      "completed": "Выполнено",
+      "plan": "План",
+      "fact": "Факт",
+      "reps": "Повторы",
+      "weight": "Вес, кг",
+      "duration": "Время, сек",
+      "distance": "Дистанция, м",
+      "rest": "Отдых, сек",
+      "countdown": "Осталось",
+      "empty": "Нет подходов"
+    },
+    "rest": {
+      "title": "Отдых",
+      "skip": "Пропустить отдых",
+      "extend": "+20 сек",
+      "nextSet": "Дальше: подход {n}",
+      "nextExercise": "Дальше: {name}"
+    },
+    "workout": {
+      "exit": "Выйти",
+      "complete": "Завершить",
+      "cancel": "Отменить тренировку",
+      "completeConfirm": "Завершить тренировку и сохранить результат?",
+      "cancelConfirm": "Отменить тренировку? Введённые данные останутся в истории со статусом «отменена»."
+    },
+    "summary": {
+      "title": "Тренировка завершена",
+      "subtitle": "Все подходы отмечены",
+      "duration": "Длительность",
+      "setsDone": "Подходов выполнено",
+      "volume": "Тоннаж",
+      "save": "Сохранить",
+      "saveAndExit": "Сохранить и выйти",
+      "cancelWorkout": "Отменить тренировку",
+      "empty": "В этой тренировке пока нет выполненных подходов"
+    },
+    "list": {
+      "title": "Упражнения",
+      "setOf": "Подход {n}",
+      "plannedShort": "{reps}×{weight} кг",
+      "plannedRepsShort": "{reps} повт.",
+      "plannedTimeShort": "{sec} сек",
+      "plannedDistanceShort": "{m} м",
+      "addSetHere": "+ подход"
+    },
+    "toast": {
+      "exerciseAdded": "Упражнение добавлено",
+      "setAdded": "Подход добавлен",
+      "exerciseReplaced": "Упражнение заменено",
+      "exerciseSkipped": "Упражнение пропущено",
+      "saved": "Тренировка сохранена",
+      "cancelled": "Тренировка отменена",
+      "notFound": "Активная тренировка не найдена"
+    },
+    "units": {
+      "secShort": "сек",
+      "mShort": "м"
+    }
   }
 }

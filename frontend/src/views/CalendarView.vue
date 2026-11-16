@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { CalendarCheck, ChevronLeft, ChevronRight, Plus, Trash2 } from '@lucide/vue'
+import { CalendarCheck, ChevronLeft, ChevronRight, Play, Plus, Trash2 } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -33,11 +33,13 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import useScheduleStore from '@/stores/schedule'
+import useWorkoutSessionStore from '@/stores/workoutSession'
 import { shiftDays, todayStr } from '@/utils/date'
 
 const { t } = useI18n()
 const router = useRouter()
 const store = useScheduleStore()
+const sessionStore = useWorkoutSessionStore()
 
 // Порядок дней недели синхронизирован с canonical-порядком MySQL SET
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
@@ -75,6 +77,18 @@ function dayNumber(date) {
 
 function isToday(date) {
   return date === today
+}
+
+// «Начать тренировку» из календаря — только для сегодняшнего дня
+async function startSession(entry) {
+  if (sessionStore.hasActive) {
+    router.push({ name: 'workout-session' })
+    return
+  }
+  const ok = await sessionStore.startFromEntry(entry.user_program_id, entry.program_day_id)
+  if (ok || sessionStore.hasActive) {
+    router.push({ name: 'workout-session' })
+  }
 }
 
 // --- Правила расписания активных программ ---
@@ -231,12 +245,22 @@ onMounted(() => {
             <div
               v-for="entry in d.entries"
               :key="`${entry.user_program_id}-${entry.program_day_id}`"
-              class="bg-primary/10 rounded-md border p-1.5 text-xs"
+              class="bg-primary/10 flex flex-col gap-1.5 rounded-md border p-1.5 text-xs"
             >
               <p class="leading-tight font-medium">{{ entry.day_name }}</p>
-              <p class="text-muted-foreground mt-0.5 line-clamp-1 leading-tight">
+              <p class="text-muted-foreground line-clamp-1 leading-tight">
                 {{ entry.program_name }}
               </p>
+              <Button
+                v-if="isToday(d.date)"
+                size="sm"
+                class="h-7 w-full text-xs"
+                :disabled="sessionStore.loading"
+                @click="startSession(entry)"
+              >
+                <Play />
+                {{ sessionStore.hasActive ? $t('session.goToActive') : $t('session.start') }}
+              </Button>
             </div>
           </div>
         </div>
