@@ -23,6 +23,13 @@ const total = computed(() => store.session?.exercises?.length ?? 0)
 
 const mediaSrc = computed(() => exercise.value?.gif_url || exercise.value?.thumbnail_url || '')
 
+// Короткая атрибуция медиа («© Gym visual») — конвенция каталога упражнений
+const attributionShort = computed(() => {
+  const full = exercise.value?.attribution
+  if (!full) return ''
+  return full.split('—')[0].trim()
+})
+
 async function skip() {
   const ok = await store.skipExercise()
   if (ok) toast.info(t('session.toast.exerciseSkipped'))
@@ -74,6 +81,12 @@ async function onPick(catalogExercise) {
             class="size-full object-contain"
             @error="$event.target.style.display = 'none'"
           />
+          <span
+            v-if="mediaSrc && attributionShort"
+            class="bg-background/70 text-muted-foreground absolute right-1 bottom-1 rounded px-1 text-[10px] leading-4"
+          >
+            {{ attributionShort }}
+          </span>
         </div>
 
         <div class="flex min-w-0 flex-1 flex-col gap-2">

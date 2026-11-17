@@ -56,6 +56,7 @@ type SessionExercise struct {
 	IsSkipped         bool         `json:"is_skipped"`
 	ThumbnailURL      string       `json:"thumbnail_url"`
 	GifURL            string       `json:"gif_url"`
+	Attribution       *string      `json:"attribution"`
 	Sets              []SessionSet `json:"sets"`
 }
 
@@ -132,6 +133,9 @@ const selectSessionExercisesQueryTmpl = `
 	    (SELECT g.path FROM exercise_media g
 	     WHERE g.exercise_id = e.id AND g.type = 'gif'
 	     ORDER BY g.sort_order, g.id LIMIT 1) AS gif_path,
+	    (SELECT g.attribution FROM exercise_media g
+	     WHERE g.exercise_id = e.id AND g.type = 'gif'
+	     ORDER BY g.sort_order, g.id LIMIT 1) AS attribution,
 	    (SELECT th.path FROM exercise_media th
 	     WHERE th.exercise_id = e.id AND th.type = 'thumbnail'
 	     ORDER BY th.sort_order, th.id LIMIT 1) AS thumbnail_path
@@ -199,6 +203,7 @@ type sessionExerciseRow struct {
 	EquipmentName     string  `db:"equipment_name"`
 	GifPath           *string `db:"gif_path"`
 	ThumbnailPath     *string `db:"thumbnail_path"`
+	Attribution       *string `db:"attribution"`
 }
 
 type sessionSetRow struct {
@@ -339,6 +344,7 @@ func (s *Service) Active(ctx context.Context, userID uint32, lang string) (*Sess
 			IsSkipped:         er.IsSkipped,
 			ThumbnailURL:      mediaURL(er.ThumbnailPath),
 			GifURL:            mediaURL(er.GifPath),
+			Attribution:       er.Attribution,
 			Sets:              []SessionSet{},
 		})
 		wexIndex[er.ID] = i
@@ -430,6 +436,7 @@ func (s *Service) loadSessionExercise(ctx context.Context, userID uint32, wexID 
 		IsSkipped:         target.IsSkipped,
 		ThumbnailURL:      mediaURL(target.ThumbnailPath),
 		GifURL:            mediaURL(target.GifPath),
+		Attribution:       target.Attribution,
 		Sets:              make([]SessionSet, 0, len(setRows)),
 	}
 	for _, sr := range setRows {
