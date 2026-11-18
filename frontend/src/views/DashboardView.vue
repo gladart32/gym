@@ -1,29 +1,28 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { CalendarCheck, Dumbbell, Play } from '@lucide/vue'
+import { CalendarCheck, Dumbbell, Flame, Play, Trophy } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import WeeklyActivityChart from '@/components/dashboard/WeeklyActivityChart.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import useScheduleStore from '@/stores/schedule'
+import useStatsStore from '@/stores/stats'
 import useWorkoutSessionStore from '@/stores/workoutSession'
 import { todayStr } from '@/utils/date'
+import { formatClock, formatTonnage } from '@/utils/format'
 
 const { t, locale } = useI18n()
 const router = useRouter()
 const scheduleStore = useScheduleStore()
 const sessionStore = useWorkoutSessionStore()
+const statsStore = useStatsStore()
 const { nextWorkout, nextLoading } = storeToRefs(scheduleStore)
-
-const stats = computed(() => [
-  { title: t('dashboard.workouts'), value: '—', description: t('dashboard.workoutsHint') },
-  { title: t('dashboard.exercises'), value: '—', description: t('dashboard.exercisesHint') },
-  { title: t('dashboard.tonnage'), value: '—', description: t('dashboard.tonnageHint') },
-])
+const { dashboard: stats, loading: statsLoading } = storeToRefs(statsStore)
 
 // «Сегодня» / «Завтра» / «Через N дн.»
 const untilLabel = computed(() => {
@@ -45,6 +44,46 @@ const dateLabel = computed(() => {
   })
 })
 
+const tonnageLabel = computed(() =>
+  formatTonnage(stats.value?.tonnage_month_kg ?? 0, locale.value, t('dashboard.kg'), t('dashboard.tons')),
+)
+
+const lastWorkoutDate = computed(() => {
+  const last = stats.value?.last_workout
+  if (!last?.date) return ''
+  const [y, m, d] = last.date.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(locale.value, {
+    day: 'numeric',
+    month: 'long',
+  })
+})
+
+const statCards = computed(() => [
+  {
+    icon: Dumbbell,
+    title: t('dashboard.workouts'),
+    value: stats.value ? String(stats.value.workouts_month) : '—',
+    hint: t('dashboard.workoutsHint', { n: stats.value?.workouts_total ?? 0 }),
+  },
+  {
+    icon: Flame,
+    title: t('dashboard.streakTitle'),
+    value: stats.value?.streak ? String(stats.value.streak.current) : '—',
+    hint: stats.value?.streak
+      ? t('dashboard.streakHint', {
+          done: stats.value.streak.completed,
+          total: stats.value.streak.scheduled,
+        })
+      : t('dashboard.streakNone'),
+  },
+  {
+    icon: Trophy,
+    title: t('dashboard.tonnage'),
+    value: stats.value ? tonnageLabel.value : '—',
+    hint: t('dashboard.tonnageHint'),
+  },
+])
+
 // «Начать тренировку» из карточки дня: старт сессии (или возврат к активной)
 async function startSession(entry) {
   if (sessionStore.hasActive) {
@@ -63,6 +102,7 @@ async function resumeSession() {
 
 onMounted(() => {
   scheduleStore.loadNext(todayStr())
+  statsStore.load()
   // если есть незавершённая тренировка — показываем баннер возврата
   sessionStore.resume()
 })
@@ -137,16 +177,62 @@ onMounted(() => {
       </CardContent>
     </Card>
 
+    <!-- Счётчики -->
     <div class="grid gap-4 sm:grid-cols-3">
-      <Card v-for="stat in stats" :key="stat.title">
+      <Card v-for="stat in statCards" :key="stat.title">
         <CardHeader>
-          <CardDescription>{{ stat.title }}</CardDescription>
+          <CardDescription class="flex items-center gap-1.5">
+            <component :is="stat.icon" class="size-4" />
+            {{ stat.title }}
+          </CardDescription>
           <CardTitle class="text-4xl">{{ stat.value }}</CardTitle>
         </CardHeader>
         <CardContent class="text-muted-foreground text-sm">
-          {{ stat.description }}
+          {{ stat.hint }}
         </CardContent>
       </Card>
     </div>
+
+    <!-- Активность за 12 недель -->
+    <Card v-if="statsLoading && !stats">
+      <CardHeader>
+        <Skeleton class="h-5 w-56" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton class="h-56 w-full" />
+      </CardContent>
+    </Card>
+    <Card v-else-if="stats">
+      <CardHeader>
+        <CardDescription>{{ $t('dashboard.activityTitle') }}</CardDescription>
+        <CardTitle>{{ $t('dashboard.activitySubtitle') }}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <WeeklyActivityChart :weeks="stats.weekly_activity" />
+      </CardContent>
+    </Card>
+
+    <!-- Последняя тренировка -->
+    <Card v-if="stats?.last_workout">
+      <CardHeader>
+        <CardDescription>{{ $t('dashboard.lastTitle') }}</CardDescription>
+        <CardTitle class="first-letter:uppercase">{{ lastWorkoutDate }} · {{ stats.last_workout.name }}</CardTitle>
+      </CardHeader>
+      <CardContent class="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <span class="flex items-center gap-1.5">
+          <Play class="size-4" />
+          {{ formatClock(stats.last_workout.duration_sec) }}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <Dumbbell class="size-4" />
+          {{ $t('dashboard.lastSets', stats.last_workout.sets_done) }}
+          · {{ $t('dashboard.lastExercises', stats.last_workout.exercises_done) }}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <Flame class="size-4" />
+          {{ formatTonnage(stats.last_workout.total_volume_kg, locale, t('dashboard.kg'), t('dashboard.tons')) }}
+        </span>
+      </CardContent>
+    </Card>
   </div>
 </template>

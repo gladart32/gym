@@ -58,6 +58,8 @@ func setup(t *testing.T) (*gin.Engine, *app.App) {
 		a.Schedule,
 		handler.NewWorkouts(a.Log, a.Workouts),
 		a.Workouts,
+		handler.NewStats(a.Log, a.Stats),
+		a.Stats,
 	)
 	return router, a
 }

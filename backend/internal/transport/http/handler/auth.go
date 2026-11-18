@@ -72,12 +72,12 @@ func (h *Auth) Register(c *gin.Context) {
 }
 
 type loginRequest struct {
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required"`
-	ClientType  string `json:"client_type"`
-	DeviceName  string `json:"device_name"`
-	OS          string `json:"os"`
-	AppVersion  string `json:"app_version"`
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required"`
+	ClientType string `json:"client_type"`
+	DeviceName string `json:"device_name"`
+	OS         string `json:"os"`
+	AppVersion string `json:"app_version"`
 }
 
 // Login handles POST /api/v1/auth/login.

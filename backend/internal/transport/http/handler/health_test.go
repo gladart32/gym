@@ -19,7 +19,7 @@ func TestReadiness(t *testing.T) {
 	healthH := handler.NewHealth(a.Log, a.DB, a.Redis)
 	tasksH := handler.NewTasks(a.Log, a.Tasks)
 	authH := handler.NewAuth(a.Log, a.Config, a.Auth, a.Tasks)
-	router := server.NewRouter(a.Log, a.Config, healthH, tasksH, authH, a.Auth, handler.NewProfile(a.Log, a.Profile), a.Profile, handler.NewExercises(a.Log, a.Exercises), handler.NewPrograms(a.Log, a.Programs), a.Programs, handler.NewSchedule(a.Log, a.Schedule), a.Schedule, handler.NewWorkouts(a.Log, a.Workouts), a.Workouts)
+	router := server.NewRouter(a.Log, a.Config, healthH, tasksH, authH, a.Auth, handler.NewProfile(a.Log, a.Profile), a.Profile, handler.NewExercises(a.Log, a.Exercises), handler.NewPrograms(a.Log, a.Programs), a.Programs, handler.NewSchedule(a.Log, a.Schedule), a.Schedule, handler.NewWorkouts(a.Log, a.Workouts), a.Workouts, handler.NewStats(a.Log, a.Stats), a.Stats)
 
 	req := httptest.NewRequest(http.MethodGet, "/ready", nil)
 	rec := httptest.NewRecorder()

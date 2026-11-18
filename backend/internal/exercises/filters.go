@@ -13,9 +13,9 @@ type TrackingTypeRef struct {
 
 // Filters is everything the client needs to render the filter panel.
 type Filters struct {
-	BodyParts     []Ref            `json:"body_parts"`
-	Equipment     []Ref            `json:"equipment"`
-	Muscles       []Ref            `json:"muscles"`
+	BodyParts     []Ref             `json:"body_parts"`
+	Equipment     []Ref             `json:"equipment"`
+	Muscles       []Ref             `json:"muscles"`
 	TrackingTypes []TrackingTypeRef `json:"tracking_types"`
 }
 

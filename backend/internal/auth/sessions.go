@@ -8,22 +8,22 @@ import (
 )
 
 const (
-	maxUserName    = 100
-	maxDeviceName  = 100
-	maxOS          = 50
-	maxAppVersion  = 20
-	maxUserAgent   = 512
+	maxUserName   = 100
+	maxDeviceName = 100
+	maxOS         = 50
+	maxAppVersion = 20
+	maxUserAgent  = 512
 )
 
 type LoginInput struct {
-	Email       string
-	Password    string
-	ClientType  string
-	DeviceName  string
-	OS          string
-	AppVersion  string
-	UserAgent   string
-	IP          []byte
+	Email      string
+	Password   string
+	ClientType string
+	DeviceName string
+	OS         string
+	AppVersion string
+	UserAgent  string
+	IP         []byte
 }
 
 type IssuedTokens struct {
@@ -272,15 +272,15 @@ func (s *Service) RevokeAllExcept(ctx context.Context, userID uint32, exceptSID 
 }
 
 type SessionInfo struct {
-	ID          uint64    `json:"id" db:"id"`
-	ClientType  string    `json:"client_type" db:"client_type"`
-	DeviceName  *string   `json:"device_name" db:"device_name"`
-	OS          *string   `json:"os" db:"os"`
-	AppVersion  *string   `json:"app_version" db:"app_version"`
-	IP          *string   `json:"ip" db:"ip"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	LastUsedAt  time.Time `json:"last_used_at" db:"last_used_at"`
-	IsCurrent   bool      `json:"is_current" db:"is_current"`
+	ID         uint64    `json:"id" db:"id"`
+	ClientType string    `json:"client_type" db:"client_type"`
+	DeviceName *string   `json:"device_name" db:"device_name"`
+	OS         *string   `json:"os" db:"os"`
+	AppVersion *string   `json:"app_version" db:"app_version"`
+	IP         *string   `json:"ip" db:"ip"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	LastUsedAt time.Time `json:"last_used_at" db:"last_used_at"`
+	IsCurrent  bool      `json:"is_current" db:"is_current"`
 }
 
 // ListSessions returns the user's active sessions with is_current

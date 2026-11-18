@@ -17,6 +17,7 @@ import (
 	"github.com/gladart32/gym/internal/programs"
 	"github.com/gladart32/gym/internal/schedule"
 	"github.com/gladart32/gym/internal/server"
+	"github.com/gladart32/gym/internal/stats"
 	"github.com/gladart32/gym/internal/tasks"
 	"github.com/gladart32/gym/internal/transport/http/handler"
 	"github.com/gladart32/gym/internal/workouts"
@@ -33,6 +34,7 @@ type App struct {
 	Exercises *exercises.Service
 	Programs  *programs.Service
 	Schedule  *schedule.Service
+	Stats     *stats.Service
 	Workouts  *workouts.Service
 	logCloser io.Closer
 }
@@ -65,6 +67,8 @@ func New(cfg *config.Config) (*App, error) {
 		"log_outputs", cfg.Logger.Outputs,
 	)
 
+	scheduleSvc := schedule.NewService(db, log)
+
 	return &App{
 		Config:    cfg,
 		Log:       log,
@@ -75,7 +79,8 @@ func New(cfg *config.Config) (*App, error) {
 		Profile:   profile.NewService(db, log),
 		Exercises: exercises.NewService(db, log),
 		Programs:  programs.NewService(db, log),
-		Schedule:  schedule.NewService(db, log),
+		Schedule:  scheduleSvc,
+		Stats:     stats.NewService(db, log, scheduleSvc),
 		Workouts:  workouts.NewService(db, log),
 		logCloser: logCloser,
 	}, nil
@@ -109,7 +114,8 @@ func (a *App) HTTPServer() *server.Server {
 	programsH := handler.NewPrograms(a.Log, a.Programs)
 	scheduleH := handler.NewSchedule(a.Log, a.Schedule)
 	workoutsH := handler.NewWorkouts(a.Log, a.Workouts)
-	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth, profileH, a.Profile, exercisesH, programsH, a.Programs, scheduleH, a.Schedule, workoutsH, a.Workouts)
+	statsH := handler.NewStats(a.Log, a.Stats)
+	return server.New(a.Config, a.Log, healthH, tasksH, authH, a.Auth, profileH, a.Profile, exercisesH, programsH, a.Programs, scheduleH, a.Schedule, workoutsH, a.Workouts, statsH, a.Stats)
 }
 
 // TaskWorker builds the background worker (asynq server + scheduler).

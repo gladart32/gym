@@ -10,12 +10,13 @@ import (
 	"github.com/gladart32/gym/internal/profile"
 	"github.com/gladart32/gym/internal/programs"
 	"github.com/gladart32/gym/internal/schedule"
+	"github.com/gladart32/gym/internal/stats"
 	"github.com/gladart32/gym/internal/transport/http/handler"
 	"github.com/gladart32/gym/internal/transport/http/middleware"
 	"github.com/gladart32/gym/internal/workouts"
 )
 
-func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service, exercisesH *handler.Exercises, programsH *handler.Programs, programsService *programs.Service, scheduleH *handler.Schedule, scheduleService *schedule.Service, workoutsH *handler.Workouts, workoutsService *workouts.Service) *gin.Engine {
+func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tasksH *handler.Tasks, authH *handler.Auth, authService *auth.Service, profileH *handler.Profile, profileService *profile.Service, exercisesH *handler.Exercises, programsH *handler.Programs, programsService *programs.Service, scheduleH *handler.Schedule, scheduleService *schedule.Service, workoutsH *handler.Workouts, workoutsService *workouts.Service, statsH *handler.Stats, statsService *stats.Service) *gin.Engine {
 	if cfg.Env == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -109,6 +110,11 @@ func NewRouter(log *slog.Logger, cfg *config.Config, health *handler.Health, tas
 			workoutsGroup.POST("/exercises", workoutsH.AddExercise)
 			workoutsGroup.PATCH("/exercises/:id", workoutsH.UpdateExercise)
 			workoutsGroup.POST("/exercises/:id/sets", workoutsH.AddSet)
+		}
+
+		statsGroup := api.Group("/stats", middleware.Auth(authService))
+		{
+			statsGroup.GET("/dashboard", statsH.Dashboard)
 		}
 	}
 
