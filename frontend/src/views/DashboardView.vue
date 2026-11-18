@@ -70,7 +70,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-3xl font-bold">{{ $t('nav.dashboard') }}</h1>
+    <h1 class="text-3xl font-bold text-center sm:text-left">{{ $t('nav.dashboard') }}</h1>
 
     <Skeleton v-if="nextLoading && !nextWorkout" class="h-40 w-full" />
 

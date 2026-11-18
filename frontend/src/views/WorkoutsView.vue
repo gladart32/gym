@@ -76,7 +76,9 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-start justify-between gap-3">
+    <div
+      class="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left"
+    >
       <div class="flex flex-col gap-1">
         <h1 class="text-3xl font-bold">{{ $t('nav.workouts') }}</h1>
         <p class="text-muted-foreground text-sm">{{ $t('programs.description') }}</p>

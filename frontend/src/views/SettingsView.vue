@@ -79,7 +79,7 @@ onMounted(async () => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-3xl font-bold">{{ $t('nav.settings') }}</h1>
+    <h1 class="text-3xl font-bold text-center sm:text-left">{{ $t('nav.settings') }}</h1>
 
     <Card>
       <CardHeader>

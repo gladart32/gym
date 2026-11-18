@@ -286,7 +286,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-3xl font-bold">{{ $t('nav.profile') }}</h1>
+    <h1 class="text-3xl font-bold text-center sm:text-left">{{ $t('nav.profile') }}</h1>
 
     <Card>
       <CardHeader>

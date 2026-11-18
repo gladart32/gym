@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import {
   CalendarDays,
   ChartColumn,
@@ -26,6 +26,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { useAuthStore } from '@/stores/auth'
 
@@ -33,6 +34,17 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const { openMobile, setOpenMobile } = useSidebar()
+
+// Закрываем мобильный оверлей сайдбара при переходе по ссылке
+watch(
+  () => route.fullPath,
+  () => {
+    if (openMobile.value) {
+      setOpenMobile(false)
+    }
+  },
+)
 
 const items = computed(() => [
   { title: t('nav.dashboard'), to: '/', icon: LayoutDashboard },

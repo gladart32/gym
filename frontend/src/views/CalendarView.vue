@@ -190,9 +190,9 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
       <h1 class="text-3xl font-bold">{{ $t('nav.calendar') }}</h1>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-center gap-2">
         <Button variant="outline" size="icon-sm" :aria-label="$t('schedule.prevWeek')" @click="prevWeek">
           <ChevronLeft />
         </Button>
@@ -226,18 +226,25 @@ onMounted(() => {
       </Card>
 
       <template v-else>
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-7">
+        <div class="@container grid grid-cols-1 gap-2 sm:grid-cols-7">
           <div
             v-for="d in store.week.days"
             :key="d.date"
-            class="flex min-h-24 flex-col gap-1.5 rounded-lg border p-2"
+            class="relative flex min-h-24 flex-col gap-1.5 rounded-lg border p-2"
             :class="isToday(d.date) ? 'border-primary bg-primary/5' : ''"
           >
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-medium">{{ $t(`weekdays.${d.weekday}`) }}</span>
-              <span class="text-muted-foreground text-xs tabular-nums">
+            <Badge
+              v-if="isToday(d.date)"
+              variant="default"
+              class="absolute -top-2.5 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap px-2 sm:inline-flex"
+            >
+              {{ $t('schedule.today') }}
+            </Badge>
+            <div class="flex min-w-0 items-center justify-between gap-1">
+              <span class="truncate text-xs font-medium">{{ $t(`weekdays.${d.weekday}`) }}</span>
+              <span class="text-muted-foreground shrink-0 text-xs tabular-nums whitespace-nowrap">
                 {{ dayNumber(d.date) }}
-                <Badge v-if="isToday(d.date)" variant="secondary" class="ml-1 px-1 py-0 text-[10px]">
+                <Badge v-if="isToday(d.date)" variant="secondary" class="ml-1 px-1 py-0 text-[10px] sm:hidden">
                   {{ $t('schedule.today') }}
                 </Badge>
               </span>
@@ -245,21 +252,27 @@ onMounted(() => {
             <div
               v-for="entry in d.entries"
               :key="`${entry.user_program_id}-${entry.program_day_id}`"
-              class="bg-primary/10 flex flex-col gap-1.5 rounded-md border p-1.5 text-xs"
+              class="bg-primary/10 flex min-w-0 flex-col gap-1.5 rounded-md border p-1.5 text-xs"
             >
-              <p class="leading-tight font-medium">{{ entry.day_name }}</p>
-              <p class="text-muted-foreground line-clamp-1 leading-tight">
+              <p :title="entry.day_name" class="truncate leading-tight font-medium">
+                {{ entry.day_name }}
+              </p>
+              <p :title="entry.program_name" class="text-muted-foreground line-clamp-1 leading-tight">
                 {{ entry.program_name }}
               </p>
               <Button
                 v-if="isToday(d.date)"
                 size="sm"
-                class="h-7 w-full text-xs"
+                class="h-7 w-full min-w-0 text-xs"
+                :aria-label="sessionStore.hasActive ? $t('session.goToActive') : $t('session.start')"
+                :title="sessionStore.hasActive ? $t('session.goToActive') : $t('session.start')"
                 :disabled="sessionStore.loading"
                 @click="startSession(entry)"
               >
                 <Play />
-                {{ sessionStore.hasActive ? $t('session.goToActive') : $t('session.start') }}
+                <span class="min-w-0 truncate sm:@max-[51rem]:hidden">
+                  {{ sessionStore.hasActive ? $t('session.goToActive') : $t('session.start') }}
+                </span>
               </Button>
             </div>
           </div>

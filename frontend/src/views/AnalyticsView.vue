@@ -4,7 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-3xl font-bold">{{ $t('nav.analytics') }}</h1>
+    <h1 class="text-3xl font-bold text-center sm:text-left">{{ $t('nav.analytics') }}</h1>
     <Card>
       <CardHeader>
         <CardTitle>{{ $t('common.inDevelopment') }}</CardTitle>
