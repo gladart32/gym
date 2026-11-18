@@ -9,6 +9,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss()],
   server: {
+    host: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
